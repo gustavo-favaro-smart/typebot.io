@@ -1,7 +1,7 @@
 import { TextInput } from "@/components/inputs/TextInput";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { queryClient, trpc } from "@/lib/queryClient";
 import { toast } from "@/lib/toast";
-import { trpc } from "@/lib/trpc";
 import {
   Button,
   Modal,
@@ -13,8 +13,10 @@ import {
   ModalOverlay,
   Stack,
 } from "@chakra-ui/react";
+import { useMutation } from "@tanstack/react-query";
 import type { Credentials } from "@typebot.io/credentials/schemas";
 import type { ForgedBlockDefinition } from "@typebot.io/forge-repository/definitions";
+import { z } from "@typebot.io/zod";
 import { useState } from "react";
 import { ZodObjectLayout } from "../zodLayouts/ZodObjectLayout";
 
@@ -63,27 +65,25 @@ export const CreateForgedCredentialsModalContent = ({
 
   const [isCreating, setIsCreating] = useState(false);
 
-  const {
-    credentials: {
-      listCredentials: { refetch: refetchCredentials },
-    },
-  } = trpc.useContext();
+  const { mutate } = useMutation(
+    trpc.credentials.createCredentials.mutationOptions({
+      onMutate: () => setIsCreating(true),
+      onSettled: () => setIsCreating(false),
+      onError: (err) => {
+        toast({
+          description: err.message,
+        });
+      },
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.credentials.listCredentials.queryKey(),
+        });
+        onNewCredentials(data.credentialsId);
+      },
+    }),
+  );
 
-  const { mutate } = trpc.credentials.createCredentials.useMutation({
-    onMutate: () => setIsCreating(true),
-    onSettled: () => setIsCreating(false),
-    onError: (err) => {
-      toast({
-        description: err.message,
-      });
-    },
-    onSuccess: (data) => {
-      refetchCredentials();
-      onNewCredentials(data.credentialsId);
-    },
-  });
-
-  const createOpenAICredentials = async (e: React.FormEvent) => {
+  const createForgedCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workspace || !blockDef.auth) return;
     mutate(
@@ -113,7 +113,7 @@ export const CreateForgedCredentialsModalContent = ({
     <ModalContent>
       <ModalHeader>Add {blockDef.auth.name}</ModalHeader>
       <ModalCloseButton />
-      <form onSubmit={createOpenAICredentials}>
+      <form onSubmit={createForgedCredentials}>
         <ModalBody as={Stack} spacing="6">
           <TextInput
             label="Label"
@@ -124,7 +124,11 @@ export const CreateForgedCredentialsModalContent = ({
             debounceTimeout={0}
           />
           <ZodObjectLayout
-            schema={blockDef.auth.schema}
+            schema={
+              blockDef.auth.type === "encryptedCredentials"
+                ? blockDef.auth.schema
+                : z.object({})
+            }
             data={data}
             onDataChange={setData}
           />

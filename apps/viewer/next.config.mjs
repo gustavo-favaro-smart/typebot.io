@@ -68,6 +68,9 @@ const nextConfig = {
     config.resolve.alias["minio"] = false;
     config.resolve.alias["qrcode"] = false;
     config.resolve.alias["isolated-vm"] = false;
+    config.resolve.alias["@googleapis/gmail"] = false;
+    config.resolve.alias["nodemailer"] = false;
+    config.resolve.alias["google-auth-library"] = false;
     return config;
   },
   async redirects() {
@@ -84,16 +87,16 @@ const nextConfig = {
       beforeFiles: (process.env.LANDING_PAGE_URL
         ? [
             {
-              source: "/_build/assets/:asset*",
-              destination: `${process.env.LANDING_PAGE_URL}/_build/assets/:asset*`,
+              source: "/assets/:asset*",
+              destination: `${process.env.LANDING_PAGE_URL}/assets/:asset*`,
             },
             {
               source: "/blog-assets/:asset*",
               destination: `${process.env.LANDING_PAGE_URL}/blog-assets/:asset*`,
             },
             {
-              source: "/_server/:server*",
-              destination: `${process.env.LANDING_PAGE_URL}/_server/:server*`,
+              source: "/_serverFn/:server*",
+              destination: `${process.env.LANDING_PAGE_URL}/_serverFn/:server*`,
             },
             {
               source: "/fonts/:font*",
