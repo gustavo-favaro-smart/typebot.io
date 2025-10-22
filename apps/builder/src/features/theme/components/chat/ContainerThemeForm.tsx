@@ -1,16 +1,4 @@
-import { DropdownList } from "@/components/DropdownList";
-import { NumberInput } from "@/components/inputs";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  FormLabel,
-  HStack,
-  Stack,
-  Switch,
-} from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import {
   borderRoundness,
@@ -22,7 +10,11 @@ import type {
   ContainerTheme,
   InputTheme,
 } from "@typebot.io/theme/schemas";
-import React from "react";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Field } from "@typebot.io/ui/components/Field";
+import { Switch } from "@typebot.io/ui/components/Switch";
+import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { ColorPicker } from "../../../../components/ColorPicker";
 
 type Props<T extends ((placeholder: string) => void) | undefined> = {
@@ -80,37 +72,33 @@ export const ContainerThemeForm = <
 
   return (
     <Stack spacing={4} data-testid={testId}>
-      <HStack justify="space-between">
-        <FormLabel mb="0" mr="0">
-          {t("theme.sideMenu.chat.theme.background")}
-        </FormLabel>
-        <HStack>
+      <Field.Root className="flex-row">
+        <Field.Label>{t("theme.sideMenu.chat.theme.background")}</Field.Label>
+        <div className="flex items-center gap-2">
           <Switch
             defaultChecked={backgroundColor !== "transparent"}
-            onChange={toggleBackgroundColor}
+            onCheckedChange={toggleBackgroundColor}
           />
           <ColorPicker
             isDisabled={backgroundColor === "transparent"}
             value={backgroundColor}
             onColorChange={updateBackgroundColor}
           />
-        </HStack>
-      </HStack>
+        </div>
+      </Field.Root>
 
-      <HStack justify="space-between">
-        <FormLabel mb="0" mr="0">
-          {t("theme.sideMenu.chat.theme.text")}
-        </FormLabel>
+      <Field.Root className="flex-row">
+        <Field.Label>{t("theme.sideMenu.chat.theme.text")}</Field.Label>
         <ColorPicker
           value={theme?.color ?? defaultTheme?.color}
           onColorChange={updateTextColor}
         />
-      </HStack>
+      </Field.Root>
       {onPlaceholderColorChange && (
-        <HStack justify="space-between">
-          <FormLabel mb="0" mr="0">
+        <Field.Root className="flex-row">
+          <Field.Label>
             {t("theme.sideMenu.chat.theme.placeholder")}
-          </FormLabel>
+          </Field.Label>
           <ColorPicker
             value={
               theme && "placeholderColor" in theme
@@ -121,74 +109,61 @@ export const ContainerThemeForm = <
             }
             onColorChange={updatePlaceholderColor}
           />
-        </HStack>
+        </Field.Root>
       )}
 
-      <Accordion allowToggle>
-        <AccordionItem>
-          <AccordionButton justifyContent="space-between">
-            Border
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel>
+      <Accordion.Root>
+        <Accordion.Item>
+          <Accordion.Trigger>Border</Accordion.Trigger>
+          <Accordion.Panel>
             <BorderThemeForm
               border={theme?.border}
               defaultBorder={defaultTheme.border}
               onBorderChange={updateBorder}
             />
-          </AccordionPanel>
-        </AccordionItem>
-        <AccordionItem>
-          <AccordionButton justifyContent="space-between">
-            Advanced
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel as={Stack}>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item>
+          <Accordion.Trigger>Advanced</Accordion.Trigger>
+          <Accordion.Panel>
             {backgroundColor !== "transparent" && (
               <>
-                <NumberInput
-                  size="sm"
-                  direction="row"
-                  label="Opacity:"
-                  width="100px"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  defaultValue={theme?.opacity ?? defaultTheme?.opacity}
-                  onValueChange={updateOpacity}
-                  withVariableButton={false}
-                />
-                {(theme?.opacity ?? defaultTheme?.opacity) !== 1 && (
-                  <NumberInput
-                    size="sm"
-                    direction="row"
-                    label="Blur:"
-                    suffix="px"
-                    width="100px"
+                <Field.Root className="flex-row">
+                  <Field.Label>Opacity:</Field.Label>
+                  <BasicNumberInput
                     min={0}
-                    defaultValue={theme?.blur ?? defaultTheme?.blur}
-                    onValueChange={updateBlur}
+                    max={1}
+                    step={0.1}
+                    defaultValue={theme?.opacity ?? defaultTheme?.opacity}
+                    onValueChange={updateOpacity}
                     withVariableButton={false}
                   />
+                </Field.Root>
+                {(theme?.opacity ?? defaultTheme?.opacity) !== 1 && (
+                  <Field.Root className="flex-row">
+                    <Field.Label>Blur:</Field.Label>
+                    <BasicNumberInput
+                      min={0}
+                      defaultValue={theme?.blur ?? defaultTheme?.blur}
+                      onValueChange={updateBlur}
+                      withVariableButton={false}
+                    />
+                  </Field.Root>
                 )}
               </>
             )}
-            <HStack justify="space-between">
-              <FormLabel mb="0" mr="0">
-                Shadow:
-              </FormLabel>
-              <HStack>
-                <DropdownList
-                  currentItem={shadow}
-                  onItemSelect={updateShadow}
-                  items={shadows}
-                  size="sm"
-                />
-              </HStack>
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+            <Field.Root className="flex-row">
+              <Field.Label>Shadow:</Field.Label>
+              <BasicSelect
+                size="sm"
+                value={shadow}
+                onChange={updateShadow}
+                items={shadows}
+              />
+            </Field.Root>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion.Root>
     </Stack>
   );
 };
@@ -202,7 +177,9 @@ const BorderThemeForm = ({
   defaultBorder: ContainerBorderTheme | undefined;
   onBorderChange: (border: ContainerBorderTheme) => void;
 }) => {
-  const updateRoundness = (roundeness: (typeof borderRoundness)[number]) => {
+  const updateRoundness = (
+    roundeness: (typeof borderRoundness)[number] | undefined,
+  ) => {
     onBorderChange({ ...border, roundeness });
   };
 
@@ -226,70 +203,62 @@ const BorderThemeForm = ({
 
   return (
     <Stack>
-      <HStack justifyContent="space-between">
-        <FormLabel mb="0" mr="0">
-          Roundness:
-        </FormLabel>
-        <HStack>
-          <DropdownList
-            currentItem={border?.roundeness ?? defaultBorder?.roundeness}
-            onItemSelect={updateRoundness}
-            items={borderRoundness}
-            placeholder="md"
+      <Field.Root className="flex-row">
+        <Field.Label>Roundness:</Field.Label>
+        <div className="flex items-center gap-2">
+          <BasicSelect
             size="sm"
+            value={border?.roundeness}
+            defaultValue={defaultBorder?.roundeness}
+            onChange={updateRoundness}
+            items={borderRoundness}
           />
           {(border?.roundeness ?? defaultBorder?.roundeness) === "custom" && (
-            <NumberInput
-              size="sm"
-              suffix="px"
-              width="60px"
-              min={0}
-              defaultValue={border?.customRoundeness}
-              onValueChange={updateCustomRoundeness}
-              withVariableButton={false}
-            />
+            <Field.Root className="flex-row inline-flex items-center">
+              <BasicNumberInput
+                className="max-w-40"
+                min={0}
+                defaultValue={border?.customRoundeness}
+                onValueChange={updateCustomRoundeness}
+                withVariableButton={false}
+              />
+              px
+            </Field.Root>
           )}
-        </HStack>
-      </HStack>
+        </div>
+      </Field.Root>
 
-      <HStack justifyContent="space-between">
-        <FormLabel mb="0" mr="0">
-          Thickness:
-        </FormLabel>
-        <NumberInput
-          size="sm"
-          suffix="px"
-          width="60px"
+      <Field.Root className="flex-row">
+        <Field.Label>Thickness:</Field.Label>
+        <BasicNumberInput
           min={0}
           defaultValue={thickness}
           onValueChange={updateThickness}
           withVariableButton={false}
         />
-      </HStack>
+        <p>px</p>
+      </Field.Root>
 
       {thickness > 0 && (
         <>
-          <HStack justifyContent="space-between">
-            <FormLabel mb="0" mr="0">
-              Color:
-            </FormLabel>
+          <Field.Root className="flex-row">
+            <Field.Label>Color:</Field.Label>
             <ColorPicker
               value={border?.color ?? defaultBorder?.color}
               onColorChange={updateColor}
             />
-          </HStack>
-          <NumberInput
-            size="sm"
-            direction="row"
-            label="Opacity:"
-            width="100px"
-            min={0}
-            max={1}
-            step={0.1}
-            defaultValue={border?.opacity ?? defaultOpacity}
-            onValueChange={updateOpacity}
-            withVariableButton={false}
-          />
+          </Field.Root>
+          <Field.Root className="flex-row">
+            <Field.Label>Opacity:</Field.Label>
+            <BasicNumberInput
+              min={0}
+              max={1}
+              step={0.1}
+              defaultValue={border?.opacity ?? defaultOpacity}
+              onValueChange={updateOpacity}
+              withVariableButton={false}
+            />
+          </Field.Root>
         </>
       )}
     </Stack>

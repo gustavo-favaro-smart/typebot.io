@@ -1,15 +1,10 @@
-import {
-  SET_TYPEBOT_COOKIE_HEADER,
-  authHandlers,
-} from "@/features/auth/lib/nextAuth";
-import { env } from "@typebot.io/env";
-import { mockedUser } from "@typebot.io/user/mockedUser";
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  authHandlers,
+  SET_TYPEBOT_COOKIE_HEADER,
+} from "@/features/auth/lib/nextAuth";
 
 export const GET = async (req: NextRequest) => {
-  const isMockingSession =
-    req.url.endsWith("/api/auth/session") && env.NEXT_PUBLIC_E2E_TEST;
-  if (isMockingSession) return NextResponse.json({ user: mockedUser });
   const response = await authHandlers.GET(req);
   setTypebotCookie(req, response);
   return response;

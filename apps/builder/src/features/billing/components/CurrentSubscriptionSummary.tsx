@@ -1,19 +1,12 @@
-import { trpc } from "@/lib/queryClient";
-import {
-  Alert,
-  AlertIcon,
-  HStack,
-  Heading,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
+import { Heading, HStack, Stack, Text } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { Plan } from "@typebot.io/prisma/enum";
+import { Alert } from "@typebot.io/ui/components/Alert";
+import { TriangleAlertIcon } from "@typebot.io/ui/icons/TriangleAlertIcon";
 import type { Workspace } from "@typebot.io/workspaces/schemas";
-import React from "react";
+import { useSubscriptionQuery } from "../hooks/useSubscriptionQuery";
 import { BillingPortalButton } from "./BillingPortalButton";
-import { PlanTag } from "./PlanTag";
+import { PlanBadge } from "./PlanTag";
 
 type Props = {
   workspace: Pick<Workspace, "id" | "plan" | "stripeId">;
@@ -22,11 +15,7 @@ type Props = {
 export const CurrentSubscriptionSummary = ({ workspace }: Props) => {
   const { t } = useTranslate();
 
-  const { data } = useQuery(
-    trpc.billing.getSubscription.queryOptions({
-      workspaceId: workspace.id,
-    }),
-  );
+  const { data } = useSubscriptionQuery(workspace.id);
 
   const isSubscribed =
     (workspace.plan === Plan.STARTER || workspace.plan === Plan.PRO) &&
@@ -39,7 +28,7 @@ export const CurrentSubscriptionSummary = ({ workspace }: Props) => {
       </Heading>
       <HStack data-testid="current-subscription">
         <Text>{t("billing.currentSubscription.subheading")} </Text>
-        <PlanTag plan={workspace.plan} />
+        <PlanBadge plan={workspace.plan} />
         {data?.subscription?.cancelDate && (
           <Text fontSize="sm">
             ({t("billing.currentSubscription.cancelDate")}{" "}
@@ -48,17 +37,19 @@ export const CurrentSubscriptionSummary = ({ workspace }: Props) => {
         )}
       </HStack>
       {data?.subscription?.status === "past_due" && (
-        <Alert fontSize="sm" status="error">
-          <AlertIcon />
-          {t("billing.currentSubscription.pastDueAlert")}
-        </Alert>
+        <Alert.Root variant="error">
+          <TriangleAlertIcon />
+          <Alert.Description>
+            {t("billing.currentSubscription.pastDueAlert")}
+          </Alert.Description>
+        </Alert.Root>
       )}
 
       {isSubscribed && (
         <BillingPortalButton
           workspaceId={workspace.id}
-          colorScheme={
-            data?.subscription?.status === "past_due" ? "blue" : undefined
+          variant={
+            data?.subscription?.status === "past_due" ? "default" : "secondary"
           }
         />
       )}

@@ -1,9 +1,9 @@
-import { SendButton } from "@/components/SendButton";
-import type { CommandData } from "@/features/commands/types";
-import type { InputSubmitContent } from "@/types";
 import type { TimeInputBlock } from "@typebot.io/blocks-inputs/time/schema";
 import { guessDeviceIsMobile } from "@typebot.io/lib/guessDeviceIsMobile";
 import { createSignal, onCleanup, onMount } from "solid-js";
+import { SendButton } from "@/components/SendButton";
+import type { CommandData } from "@/features/commands/types";
+import type { InputSubmitContent } from "@/types";
 
 type Props = {
   block: TimeInputBlock["options"];
@@ -44,6 +44,7 @@ export const TimeForm = (props: Props) => {
     const { data } = event;
     if (!data.isFromTypebot) return;
     if (data.command === "setInputValue") setInputValue(data.value);
+    if (data.command === "submitInput") submit();
   };
 
   return (

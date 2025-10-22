@@ -1,20 +1,11 @@
-import { AlertIcon } from "@/components/icons";
-import type { WorkspaceInApp } from "@/features/workspace/WorkspaceProvider";
-import { trpc } from "@/lib/queryClient";
-import {
-  Flex,
-  HStack,
-  Heading,
-  Progress,
-  Skeleton,
-  Stack,
-  Text,
-  Tooltip,
-} from "@chakra-ui/react";
+import { Flex, Heading, HStack, Progress, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslate } from "@tolgee/react";
 import { getChatsLimit } from "@typebot.io/billing/helpers/getChatsLimit";
 import { parseNumberWithCommas } from "@typebot.io/lib/utils";
+import { Skeleton } from "@typebot.io/ui/components/Skeleton";
+import type { WorkspaceInApp } from "@/features/workspace/WorkspaceProvider";
+import { trpc } from "@/lib/queryClient";
 
 type Props = {
   workspace: WorkspaceInApp;
@@ -53,13 +44,13 @@ export const UsageProgressBars = ({ workspace }: Props) => {
           </HStack>
 
           <HStack>
-            <Skeleton
-              fontWeight="bold"
-              isLoaded={!isLoading}
-              h={isLoading ? "5px" : "auto"}
-            >
-              {parseNumberWithCommas(totalChatsUsed)}
-            </Skeleton>
+            {isLoading ? (
+              <Skeleton className="h-2 w-5" />
+            ) : (
+              <Text fontWeight="bold">
+                {parseNumberWithCommas(totalChatsUsed)}
+              </Text>
+            )}
             <Text>
               /{" "}
               {workspaceChatsLimit === "inf"

@@ -1,10 +1,4 @@
-import { getAuthenticatedUser } from "@/features/auth/helpers/getAuthenticatedUser";
-import {
-  canReadTypebots,
-  canWriteTypebots,
-  isUniqueConstraintError,
-} from "@/helpers/databaseRules";
-import { sendGuestInvitationEmail } from "@typebot.io/emails/emails/GuestInvitationEmail";
+import { sendGuestInvitationEmail } from "@typebot.io/emails/transactional/GuestInvitationEmail";
 import { env } from "@typebot.io/env";
 import {
   badRequest,
@@ -15,6 +9,12 @@ import {
 import prisma from "@typebot.io/prisma";
 import { type CollaborationType, WorkspaceRole } from "@typebot.io/prisma/enum";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getAuthenticatedUser } from "@/features/auth/helpers/getAuthenticatedUser";
+import {
+  canReadTypebots,
+  canWriteTypebots,
+  isUniqueConstraintError,
+} from "@/helpers/databaseRules";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const user = await getAuthenticatedUser(req, res);
@@ -80,15 +80,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       await prisma.invitation.create({
         data: { email: email.toLowerCase().trim(), type, typebotId },
       });
-    if (!env.NEXT_PUBLIC_E2E_TEST)
-      await sendGuestInvitationEmail({
-        to: email,
-        hostEmail: user.email ?? "",
-        url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${typebot.workspaceId}`,
-        guestEmail: email.toLowerCase(),
-        typebotName: typebot.name,
-        workspaceName: typebot.workspace?.name ?? "",
-      });
+    await sendGuestInvitationEmail({
+      hostEmail: user.email ?? "",
+      url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${typebot.workspaceId}`,
+      guestEmail: email.toLowerCase(),
+      typebotName: typebot.name,
+      workspaceName: typebot.workspace?.name ?? "",
+    });
     return res.send({
       message: "success",
     });

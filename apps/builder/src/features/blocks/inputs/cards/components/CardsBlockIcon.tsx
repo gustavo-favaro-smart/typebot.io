@@ -1,7 +1,6 @@
-import { GalleryIcon } from "@/components/icons";
 import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { CarouselHorizontal02Icon } from "@typebot.io/ui/icons/CarouselHorizontal02Icon";
 
 export const CardsBlockIcon = (props: IconProps) => (
-  <GalleryIcon color="orange.500" {...props} />
+  <CarouselHorizontal02Icon color="orange.500" {...props} />
 );

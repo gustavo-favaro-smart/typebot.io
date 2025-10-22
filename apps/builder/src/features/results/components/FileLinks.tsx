@@ -1,6 +1,6 @@
-import { TextLink } from "@/components/TextLink";
-import { FileIcon } from "@/components/icons";
 import { HStack, Wrap, WrapItem } from "@chakra-ui/react";
+import { FileEmpty02Icon } from "@typebot.io/ui/icons/FileEmpty02Icon";
+import { TextLink } from "@/components/TextLink";
 
 export const FileLinks = ({ fileNamesStr }: { fileNamesStr: string }) => {
   const fileNames = fileNamesStr.split(", ");
@@ -8,7 +8,7 @@ export const FileLinks = ({ fileNamesStr }: { fileNamesStr: string }) => {
     <Wrap maxW="300px">
       {fileNames.map((name) => (
         <HStack as={WrapItem} key={name}>
-          <FileIcon />
+          <FileEmpty02Icon />
           <TextLink href={name} isExternal>
             {decodeURIComponent(name.split("/").pop() ?? "")}
           </TextLink>

@@ -1,7 +1,5 @@
-import { ImageIcon } from "@/components/icons";
-import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { Image02Icon } from "@typebot.io/ui/icons/Image02Icon";
 
-export const ImageBubbleIcon = (props: IconProps) => (
-  <ImageIcon color="blue.500" {...props} />
+export const ImageBubbleIcon = ({ className }: { className?: string }) => (
+  <Image02Icon className={className} />
 );

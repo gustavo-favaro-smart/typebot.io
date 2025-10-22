@@ -1,7 +1,5 @@
-import { GlobeIcon } from "@/components/icons";
-import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { Link02Icon } from "@typebot.io/ui/icons/Link02Icon";
 
-export const UrlInputIcon = (props: IconProps) => (
-  <GlobeIcon color="orange.500" {...props} />
+export const UrlInputIcon = ({ className }: { className?: string }) => (
+  <Link02Icon className={className} />
 );

@@ -1,5 +1,4 @@
-import { SendEmailIcon as SendEmailIco } from "@/components/icons";
 import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { SentIcon } from "@typebot.io/ui/icons/SentIcon";
 
-export const SendEmailIcon = (props: IconProps) => <SendEmailIco {...props} />;
+export const SendEmailIcon = (props: IconProps) => <SentIcon {...props} />;

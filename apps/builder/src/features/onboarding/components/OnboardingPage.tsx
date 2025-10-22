@@ -1,13 +1,14 @@
-import { ChevronLastIcon } from "@/components/icons";
-import { useAcceptTermsMutation } from "@/features/user/hooks/useAcceptTermsMutation";
-import { useUser } from "@/features/user/hooks/useUser";
-import { Button, Flex, HStack, VStack, chakra } from "@chakra-ui/react";
+import { Flex, HStack, VStack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { env } from "@typebot.io/env";
 import { Standard } from "@typebot.io/react";
+import { Button } from "@typebot.io/ui/components/Button";
+import { ArrowRight01Icon } from "@typebot.io/ui/icons/ArrowRight01Icon";
 import confetti from "canvas-confetti";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
+import { useAcceptTermsMutation } from "@/features/user/hooks/useAcceptTermsMutation";
+import { useUser } from "@/features/user/hooks/useUser";
 
 export const OnboardingPage = () => {
   const { t } = useTranslate();
@@ -104,12 +105,13 @@ export const OnboardingPage = () => {
         px="10"
       >
         <Button
-          rightIcon={<ChevronLastIcon />}
+          variant="secondary"
           size="sm"
           onClick={skipOnboarding}
-          isDisabled={!canSkipOnboarding}
+          disabled={!canSkipOnboarding}
         >
           {t("skip")}
+          <ArrowRight01Icon />
         </Button>
       </HStack>
 
@@ -126,15 +128,9 @@ export const OnboardingPage = () => {
         </Flex>
       </Flex>
 
-      <chakra.canvas
+      <canvas
         ref={confettiCanvaContainer}
-        pos="fixed"
-        top="0"
-        left="0"
-        w="full"
-        h="full"
-        zIndex={9999}
-        pointerEvents="none"
+        className="fixed top-0 left-0 w-full h-full z-10 pointer-events-none"
       />
     </VStack>
   );

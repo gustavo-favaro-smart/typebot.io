@@ -1,9 +1,9 @@
-import { iconButtonVariants } from "@/components/IconButton";
-import { ChevronDownIcon } from "@typebot.io/ui/icons/ChevronDownIcon";
-import { ChevronUpIcon } from "@typebot.io/ui/icons/ChevronUpIcon";
+import { ArrowDown01Icon } from "@typebot.io/ui/icons/ArrowDown01Icon";
+import { ArrowUp01Icon } from "@typebot.io/ui/icons/ArrowUp01Icon";
 import { cn } from "@typebot.io/ui/lib/cn";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { iconButtonVariants } from "@/components/IconButton";
 import threeDButton from "./assets/3d-button.png";
 
 const data = [
@@ -102,9 +102,9 @@ const Principle = ({
             )}
           >
             {isOpened ? (
-              <ChevronUpIcon className="size-8" />
+              <ArrowUp01Icon className="size-8" />
             ) : (
-              <ChevronDownIcon />
+              <ArrowDown01Icon />
             )}
           </span>
         </div>

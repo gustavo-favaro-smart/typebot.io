@@ -1,4 +1,3 @@
-import { authenticateUser } from "@/helpers/authenticateUser";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { env } from "@typebot.io/env";
@@ -16,6 +15,7 @@ import { isReadTypebotForbidden } from "@typebot.io/typebot/helpers/isReadTypebo
 import { resumeWhatsAppFlow } from "@typebot.io/whatsapp/resumeWhatsAppFlow";
 import type { NextApiRequest, NextApiResponse } from "next";
 import PartySocket from "partysocket";
+import { authenticateUser } from "@/helpers/authenticateUser";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
@@ -78,7 +78,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const chatSession = await getSession(result.lastChatSessionId);
 
-    if (chatSession?.state.whatsApp) {
+    if (chatSession?.state?.whatsApp) {
       if (!typebot.whatsAppCredentialsId)
         return internalServerError(
           res,
@@ -91,14 +91,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           "Expected session ID to be in format: wa-{phoneNumberId}-{receivedMessage.from}",
         );
       await resumeWhatsAppFlow({
-        receivedMessage: {
-          from,
-          timestamp: new Date().toISOString(),
-          type: "webhook",
-          webhook: {
-            data: parseBodyForWhatsApp(req),
+        receivedMessages: [
+          {
+            from,
+            timestamp: new Date().toISOString(),
+            type: "webhook",
+            webhook: {
+              data: parseBodyForWhatsApp(req),
+            },
           },
-        },
+        ],
         workspaceId: typebot.workspace.id,
         sessionId: chatSession.id,
         credentialsId: typebot.whatsAppCredentialsId,

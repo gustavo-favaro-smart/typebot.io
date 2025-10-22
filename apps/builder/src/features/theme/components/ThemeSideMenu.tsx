@@ -1,16 +1,4 @@
-import { ChatIcon, CodeIcon, DropletIcon, TableIcon } from "@/components/icons";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  HStack,
-  Heading,
-  Stack,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Heading, Stack, useColorModeValue } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { defaultSettings } from "@typebot.io/settings/constants";
 import type {
@@ -18,11 +6,16 @@ import type {
   GeneralTheme,
   ThemeTemplate,
 } from "@typebot.io/theme/schemas";
-import React from "react";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { ChatIcon } from "@typebot.io/ui/icons/ChatIcon";
+import { GridViewIcon } from "@typebot.io/ui/icons/GridViewIcon";
+import { RainDropIcon } from "@typebot.io/ui/icons/RainDropIcon";
+import { SourceCodeIcon } from "@typebot.io/ui/icons/SourceCodeIcon";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { CustomCssSettings } from "./CustomCssSettings";
-import { ThemeTemplates } from "./ThemeTemplates";
 import { ChatThemeSettings } from "./chat/ChatThemeSettings";
 import { GeneralSettings } from "./general/GeneralSettings";
+import { ThemeTemplates } from "./ThemeTemplates";
 
 export const ThemeSideMenu = () => {
   const { t } = useTranslate();
@@ -77,17 +70,16 @@ export const ThemeSideMenu = () => {
       rounded="xl"
       bg={useColorModeValue("white", "gray.900")}
     >
-      <Accordion allowToggle borderBottomWidth={0}>
+      <Accordion.Root>
         {currentUserMode === "write" && (
-          <AccordionItem borderTopWidth={0}>
-            <AccordionButton py={4}>
-              <HStack flex="1" pl={2} spacing={3}>
-                <TableIcon />
+          <Accordion.Item className="border-0">
+            <Accordion.Trigger className="py-5">
+              <div className="flex items-center gap-3 pl-2">
+                <GridViewIcon />
                 <Heading fontSize="md">{t("theme.sideMenu.template")}</Heading>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
+              </div>
+            </Accordion.Trigger>
+            <Accordion.Panel>
               {typebot && (
                 <ThemeTemplates
                   selectedTemplateId={templateId}
@@ -97,18 +89,17 @@ export const ThemeSideMenu = () => {
                   onTemplateSelect={selectTemplate}
                 />
               )}
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.Panel>
+          </Accordion.Item>
         )}
-        <AccordionItem>
-          <AccordionButton py={4}>
-            <HStack flex="1" pl={2} spacing={3}>
-              <DropletIcon />
+        <Accordion.Item className="border-0 border-t-[1px]">
+          <Accordion.Trigger className="py-5">
+            <div className="flex items-center gap-3 pl-2">
+              <RainDropIcon />
               <Heading fontSize="md">{t("theme.sideMenu.global")}</Heading>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel pb={4}>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Panel>
             {typebot && (
               <GeneralSettings
                 key={templateId}
@@ -121,17 +112,16 @@ export const ThemeSideMenu = () => {
                 onBrandingChange={updateBranding}
               />
             )}
-          </AccordionPanel>
-        </AccordionItem>
-        <AccordionItem>
-          <AccordionButton py={4}>
-            <HStack flex="1" pl={2} spacing={3}>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item className="border-0 border-t-[1px]">
+          <Accordion.Trigger className="py-5">
+            <div className="flex items-center gap-3 pl-2">
               <ChatIcon />
               <Heading fontSize="md">{t("theme.sideMenu.chat")}</Heading>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel pb={4}>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Panel>
             {typebot && (
               <ChatThemeSettings
                 key={templateId}
@@ -142,17 +132,16 @@ export const ThemeSideMenu = () => {
                 onChatThemeChange={updateChatTheme}
               />
             )}
-          </AccordionPanel>
-        </AccordionItem>
-        <AccordionItem _last={{ borderBottomWidth: 0 }}>
-          <AccordionButton py={4}>
-            <HStack flex="1" pl={2} spacing={3}>
-              <CodeIcon />
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item className="border-0 border-t-[1px] last:rounded-b-none">
+          <Accordion.Trigger className="py-5">
+            <div className="flex items-center gap-3 pl-2">
+              <SourceCodeIcon />
               <Heading fontSize="md">{t("theme.sideMenu.customCSS")}</Heading>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel pb={4}>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Panel>
             {typebot && (
               <CustomCssSettings
                 key={templateId}
@@ -160,9 +149,9 @@ export const ThemeSideMenu = () => {
                 onCustomCssChange={updateCustomCss}
               />
             )}
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion.Root>
     </Stack>
   );
 };

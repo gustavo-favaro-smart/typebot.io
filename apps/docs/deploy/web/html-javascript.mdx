@@ -223,7 +223,10 @@ type PopupProps = {
       details?: unknown;
     }[]
   ) => void;
-  onChatStatePersisted?: (isEnabled: boolean) => void;
+  onChatStatePersisted?: (
+    isEnabled: boolean,
+    { typebotId }: { typebotId: string }
+  ) => void;
   onScriptExecutionSuccess?: (message: string) => void;
   autoShowDelay?: number;
   theme?: {
@@ -406,6 +409,7 @@ Here are the commands you can use to trigger your embedded typebot:
 - `Typebot.toggle()`: Toggle the bubble or popup open/close state,
 - `Typebot.showPreviewMessage()`: Show preview message from the bubble,
 - `Typebot.hidePreviewMessage()`: Hide preview message from the bubble,
+- `Typebot.reset()`: Resets remembered state of the bot (only useful if `Remember user` is enabled),
 - `Typebot.setPrefilledVariables(...)`: Set prefilled variables.
   Example:
 
@@ -419,6 +423,7 @@ Here are the commands you can use to trigger your embedded typebot:
   For more information, check out [Additional configuration](#additional-configuration).
 
 - `Typebot.setInputValue(...)`: Set the value in the currently displayed input.
+- `Typebot.submitInput()`: Submit the currently displayed input.
 - `Typebot.sendCommand(...)`: Send a [command](/editor/events/command) to the bot.
 - `Typebot.reload()`: Reload the bot.
 

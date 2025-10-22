@@ -1,14 +1,7 @@
-import { ChevronDownIcon } from "@/components/icons";
-import {
-  Button,
-  HStack,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Tag,
-  Text,
-} from "@chakra-ui/react";
+import { HStack, Text } from "@chakra-ui/react";
+import { Badge } from "@typebot.io/ui/components/Badge";
+import { Menu } from "@typebot.io/ui/components/Menu";
+import { ArrowDown01Icon } from "@typebot.io/ui/icons/ArrowDown01Icon";
 import { runtimes } from "../data";
 
 type Runtime = (typeof runtimes)[number];
@@ -20,38 +13,36 @@ type Props = {
 
 export const RuntimeMenu = ({ selectedRuntime, onSelectRuntime }: Props) => {
   return (
-    <Menu>
-      <MenuButton
-        as={Button}
-        leftIcon={selectedRuntime.icon}
-        rightIcon={<ChevronDownIcon />}
-      >
+    <Menu.Root>
+      <Menu.TriggerButton variant="secondary">
         <HStack justifyContent="space-between">
+          {selectedRuntime.icon}
           <Text>{selectedRuntime.name}</Text>
           {"status" in selectedRuntime &&
           typeof selectedRuntime.status === "string" ? (
-            <Tag colorScheme="orange">{selectedRuntime.status}</Tag>
+            <Badge colorScheme="orange">{selectedRuntime.status}</Badge>
           ) : null}
+          <ArrowDown01Icon />
         </HStack>
-      </MenuButton>
-      <MenuList w="100px">
+      </Menu.TriggerButton>
+      <Menu.Popup>
         {runtimes
           .filter((runtime) => runtime.name !== selectedRuntime.name)
           .map((runtime) => (
-            <MenuItem
+            <Menu.Item
               key={runtime.name}
-              icon={runtime.icon}
               onClick={() => onSelectRuntime(runtime)}
             >
               <HStack justifyContent="space-between">
+                {runtime.icon}
                 <Text>{runtime.name}</Text>
                 {"status" in runtime && typeof runtime.status === "string" ? (
-                  <Tag colorScheme="orange">{runtime.status}</Tag>
+                  <Badge colorScheme="orange">{runtime.status}</Badge>
                 ) : null}
               </HStack>
-            </MenuItem>
+            </Menu.Item>
           ))}
-      </MenuList>
-    </Menu>
+      </Menu.Popup>
+    </Menu.Root>
   );
 };

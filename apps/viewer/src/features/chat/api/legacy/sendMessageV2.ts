@@ -1,4 +1,3 @@
-import { publicProcedure } from "@/helpers/server/trpc";
 import { TRPCError } from "@trpc/server";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { continueBotFlow } from "@typebot.io/bot-engine/continueBotFlow";
@@ -18,6 +17,7 @@ import {
   deleteSessionStore,
   getSessionStore,
 } from "@typebot.io/runtime-session-store";
+import { publicProcedure } from "@/helpers/server/trpc";
 
 export const sendMessageV2 = publicProcedure
   .meta({
@@ -42,7 +42,7 @@ export const sendMessageV2 = publicProcedure
       const newSessionId = sessionId ?? createId();
 
       const isSessionExpired =
-        session &&
+        session?.state &&
         isDefined(session.state.expiryTimeout) &&
         session.updatedAt.getTime() + session.state.expiryTimeout < Date.now();
 
@@ -53,7 +53,7 @@ export const sendMessageV2 = publicProcedure
         });
 
       const sessionStore = getSessionStore(newSessionId);
-      if (!session) {
+      if (!session?.state) {
         if (!startParams)
           throw new TRPCError({
             code: "BAD_REQUEST",

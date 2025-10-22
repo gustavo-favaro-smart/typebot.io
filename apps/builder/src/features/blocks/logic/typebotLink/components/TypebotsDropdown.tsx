@@ -1,10 +1,12 @@
-import { EmojiOrImageIcon } from "@/components/EmojiOrImageIcon";
-import { ExternalLinkIcon } from "@/components/icons";
-import { Select } from "@/components/inputs/Select";
-import { useTypebots } from "@/features/dashboard/hooks/useTypebots";
-import { HStack, IconButton, Input } from "@chakra-ui/react";
-import Link from "next/link";
+import { HStack } from "@chakra-ui/react";
+import { Input } from "@typebot.io/ui/components/Input";
+import { ArrowUpRight01Icon } from "@typebot.io/ui/icons/ArrowUpRight01Icon";
+import { LayoutBottomIcon } from "@typebot.io/ui/icons/LayoutBottomIcon";
 import { useRouter } from "next/router";
+import { ButtonLink } from "@/components/ButtonLink";
+import { EmojiOrImageIcon } from "@/components/EmojiOrImageIcon";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { useTypebots } from "@/features/dashboard/hooks/useTypebots";
 
 type Props = {
   idsToExclude: string[];
@@ -24,13 +26,14 @@ export const TypebotsDropdown = ({
     workspaceId: currentWorkspaceId,
   });
 
-  if (isLoading) return <Input value="Loading..." isDisabled />;
+  if (isLoading) return <Input value="Loading..." disabled />;
   if (!typebots || typebots.length === 0)
-    return <Input value="No typebots found" isDisabled />;
+    return <Input value="No typebots found" disabled />;
   return (
-    <HStack>
-      <Select
-        selectedItem={typebotId}
+    <HStack flex={1}>
+      <BasicSelect
+        value={typebotId}
+        className="w-full"
         items={[
           {
             label: "Current typebot",
@@ -42,22 +45,23 @@ export const TypebotsDropdown = ({
               icon: (
                 <EmojiOrImageIcon
                   icon={typebot.icon}
-                  boxSize="18px"
-                  emojiFontSize="18px"
+                  size="sm"
+                  defaultIcon={LayoutBottomIcon}
                 />
               ),
               label: typebot.name,
               value: typebot.id,
             })),
         ]}
-        onSelect={onSelect}
+        onChange={onSelect}
         placeholder={"Select a typebot"}
       />
       {typebotId && typebotId !== "current" && (
-        <IconButton
+        <ButtonLink
           aria-label="Navigate to typebot"
-          icon={<ExternalLinkIcon />}
-          as={Link}
+          variant="secondary"
+          className="flex-shrink-0"
+          size="icon"
           href={{
             pathname: "/typebots/[typebotId]/edit",
             query: {
@@ -69,7 +73,9 @@ export const TypebotsDropdown = ({
                 : (query.typebotId ?? []),
             },
           }}
-        />
+        >
+          <ArrowUpRight01Icon />
+        </ButtonLink>
       )}
     </HStack>
   );

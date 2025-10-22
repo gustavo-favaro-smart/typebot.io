@@ -1,12 +1,13 @@
+import { Flex, Stack } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslate } from "@tolgee/react";
+import { LoaderCircleIcon } from "@typebot.io/ui/icons/LoaderCircleIcon";
+import { useRouter } from "next/router";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { Seo } from "@/components/Seo";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { trpc } from "@/lib/queryClient";
-import { Flex, Spinner, Stack } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslate } from "@tolgee/react";
-import { useRouter } from "next/router";
 import { TypebotDndProvider } from "../TypebotDndProvider";
 import { FolderContent } from "./FolderContent";
 
@@ -15,10 +16,7 @@ export const FolderPage = () => {
   const router = useRouter();
   const { workspace, currentUserMode } = useWorkspace();
 
-  const {
-    data: { folder } = {},
-    error,
-  } = useQuery(
+  const { data: { folder } = {}, error } = useQuery(
     trpc.folders.getFolder.queryOptions(
       {
         folderId: router.query.id as string,
@@ -42,7 +40,7 @@ export const FolderPage = () => {
       <TypebotDndProvider>
         {!folder ? (
           <Flex flex="1">
-            <Spinner mx="auto" />
+            <LoaderCircleIcon className="animate-spin mx-auto" />
           </Flex>
         ) : (
           <FolderContent folder={folder} />

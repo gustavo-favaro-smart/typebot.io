@@ -1,14 +1,9 @@
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
 import {
-  Button,
   Flex,
-  HStack,
   Heading,
+  HStack,
   Stack,
-  Tag,
   Text,
-  Tooltip,
-  chakra,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -16,7 +11,10 @@ import { T, useTranslate } from "@tolgee/react";
 import { prices } from "@typebot.io/billing/constants";
 import { formatPrice } from "@typebot.io/billing/helpers/formatPrice";
 import { Plan } from "@typebot.io/prisma/enum";
-import { ChatsProTiersModal } from "./ChatsProTiersModal";
+import { Button } from "@typebot.io/ui/components/Button";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Tooltip } from "@typebot.io/ui/components/Tooltip";
+import { ChatsProTiersDialog } from "./ChatsProTiersDialog";
 import { FeaturesList } from "./FeaturesList";
 
 type Props = {
@@ -43,7 +41,7 @@ export const ProPlanPricingCard = ({
 
   return (
     <>
-      <ChatsProTiersModal isOpen={isOpen} onClose={onClose} />{" "}
+      <ChatsProTiersDialog isOpen={isOpen} onClose={onClose} />{" "}
       <Flex
         p="6"
         pos="relative"
@@ -56,17 +54,9 @@ export const ProPlanPricingCard = ({
         rounded="lg"
       >
         <Flex justifyContent="center">
-          <Tag
-            pos="absolute"
-            top="-10px"
-            colorScheme="orange"
-            bg={useColorModeValue("purple.500", "purple.400")}
-            variant="solid"
-            fontWeight="medium"
-            style={{ marginTop: 0 }}
-          >
+          <div className="absolute top-[-10px] bg-purple-9 font-medium text-white text-xs px-2 py-1 rounded-md">
             {t("billing.pricingCard.pro.mostPopularLabel")}
-          </Tag>
+          </div>
         </Flex>
         <Stack justifyContent="space-between" h="full">
           <Stack spacing="4" mt={2}>
@@ -74,13 +64,7 @@ export const ProPlanPricingCard = ({
               <T
                 keyName="billing.pricingCard.heading"
                 params={{
-                  strong: (
-                    <chakra.span
-                      color={useColorModeValue("purple.400", "purple.300")}
-                    >
-                      Pro
-                    </chakra.span>
-                  ),
+                  strong: <span className="text-purple-900">Pro</span>,
                 }}
               />
             </Heading>
@@ -90,13 +74,16 @@ export const ProPlanPricingCard = ({
             <Stack spacing="4">
               <Heading>
                 {formatPrice(prices.PRO, { currency })}
-                <chakra.span fontSize="md">
+                <span className="text-base">
                   {t("billing.pricingCard.perMonth")}
-                </chakra.span>
+                </span>
               </Heading>
               <Text fontWeight="bold">
-                <Tooltip
-                  label={
+                <Tooltip.Root>
+                  <Tooltip.Trigger className="underline cursor-pointer">
+                    {t("billing.pricingCard.pro.everythingFromStarter")}
+                  </Tooltip.Trigger>
+                  <Tooltip.Popup>
                     <FeaturesList
                       features={[
                         t("billing.pricingCard.starter.brandingRemoved"),
@@ -105,21 +92,16 @@ export const ProPlanPricingCard = ({
                       ]}
                       spacing="0"
                     />
-                  }
-                  hasArrow
-                  placement="top"
-                >
-                  <chakra.span textDecoration="underline" cursor="pointer">
-                    {t("billing.pricingCard.pro.everythingFromStarter")}
-                  </chakra.span>
-                </Tooltip>
+                  </Tooltip.Popup>
+                </Tooltip.Root>
+
                 {t("billing.pricingCard.plus")}
               </Text>
               <FeaturesList
                 features={[
                   t("billing.pricingCard.pro.includedSeats"),
                   <Stack key="starter-chats" spacing={1}>
-                    <HStack key="test">
+                    <HStack key="test" gap={0}>
                       <Text>
                         10,000 {t("billing.pricingCard.chatsPerMonth")}
                       </Text>
@@ -145,11 +127,9 @@ export const ProPlanPricingCard = ({
             </Stack>
 
             <Button
-              colorScheme="orange"
-              variant="outline"
+              variant="secondary"
               onClick={onPayClick}
-              isLoading={isLoading}
-              isDisabled={currentPlan === Plan.PRO}
+              disabled={isLoading || currentPlan === Plan.PRO}
             >
               {getButtonLabel()}
             </Button>

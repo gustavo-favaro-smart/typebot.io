@@ -1,19 +1,17 @@
-import { DropdownList } from "@/components/DropdownList";
-import { TextInput } from "@/components/inputs";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Stack,
-} from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import {
   chatwootTasks,
   defaultChatwootOptions,
 } from "@typebot.io/blocks-integrations/chatwoot/constants";
 import type { ChatwootBlock } from "@typebot.io/blocks-integrations/chatwoot/schema";
-import React from "react";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Field } from "@typebot.io/ui/components/Field";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import {
+  DebouncedTextInput,
+  DebouncedTextInputWithVariablesButton,
+} from "@/components/inputs/DebouncedTextInput";
 
 type Props = {
   options: ChatwootBlock["options"];
@@ -21,7 +19,7 @@ type Props = {
 };
 
 export const ChatwootSettings = ({ options, onOptionsChange }: Props) => {
-  const updateTask = (task: (typeof chatwootTasks)[number]) => {
+  const updateTask = (task: (typeof chatwootTasks)[number] | undefined) => {
     onOptionsChange({ ...options, task });
   };
 
@@ -29,91 +27,105 @@ export const ChatwootSettings = ({ options, onOptionsChange }: Props) => {
 
   return (
     <Stack spacing={4}>
-      <DropdownList
-        currentItem={options?.task ?? defaultChatwootOptions.task}
-        onItemSelect={updateTask}
+      <BasicSelect
+        value={options?.task}
+        defaultValue={defaultChatwootOptions.task}
+        onChange={updateTask}
         items={chatwootTasks}
       />
       {task === "Show widget" && (
         <>
-          <TextInput
-            isRequired
-            label="Base URL"
-            defaultValue={options?.baseUrl ?? defaultChatwootOptions.baseUrl}
-            onChange={(baseUrl: string) => {
-              onOptionsChange({ ...options, baseUrl });
-            }}
-            withVariableButton={false}
-          />
-          <TextInput
-            isRequired
-            label="Website token"
-            defaultValue={options?.websiteToken}
-            onChange={(websiteToken) =>
-              onOptionsChange({ ...options, websiteToken })
-            }
-            moreInfoTooltip="Can be found in Chatwoot under Settings > Inboxes > Settings > Configuration, in the code snippet."
-          />
-          <Accordion allowMultiple>
-            <AccordionItem>
-              <AccordionButton justifyContent="space-between">
-                Set user details
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4} as={Stack} spacing="4">
-                <TextInput
-                  label="ID"
-                  defaultValue={options?.user?.id}
-                  onChange={(id: string) => {
-                    onOptionsChange({
-                      ...options,
-                      user: { ...options?.user, id },
-                    });
-                  }}
-                />
-                <TextInput
-                  label="Name"
-                  defaultValue={options?.user?.name}
-                  onChange={(name: string) => {
-                    onOptionsChange({
-                      ...options,
-                      user: { ...options?.user, name },
-                    });
-                  }}
-                />
-                <TextInput
-                  label="Email"
-                  defaultValue={options?.user?.email}
-                  onChange={(email: string) => {
-                    onOptionsChange({
-                      ...options,
-                      user: { ...options?.user, email },
-                    });
-                  }}
-                />
-                <TextInput
-                  label="Avatar URL"
-                  defaultValue={options?.user?.avatarUrl}
-                  onChange={(avatarUrl: string) => {
-                    onOptionsChange({
-                      ...options,
-                      user: { ...options?.user, avatarUrl },
-                    });
-                  }}
-                />
-                <TextInput
-                  label="Phone number"
-                  defaultValue={options?.user?.phoneNumber}
-                  onChange={(phoneNumber: string) => {
-                    onOptionsChange({
-                      ...options,
-                      user: { ...options?.user, phoneNumber },
-                    });
-                  }}
-                />
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
+          <Field.Root>
+            <Field.Label>Base URL</Field.Label>
+            <DebouncedTextInput
+              defaultValue={options?.baseUrl ?? defaultChatwootOptions.baseUrl}
+              onValueChange={(baseUrl: string) => {
+                onOptionsChange({ ...options, baseUrl });
+              }}
+            />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>
+              Website token
+              <MoreInfoTooltip>
+                Can be found in Chatwoot under Settings &gt; Inboxes &gt;
+                Settings &gt; Configuration, in the code snippet.
+              </MoreInfoTooltip>
+            </Field.Label>
+            <DebouncedTextInputWithVariablesButton
+              defaultValue={options?.websiteToken}
+              onValueChange={(websiteToken) =>
+                onOptionsChange({ ...options, websiteToken })
+              }
+            />
+          </Field.Root>
+          <Accordion.Root>
+            <Accordion.Item>
+              <Accordion.Trigger>Set user details</Accordion.Trigger>
+              <Accordion.Panel>
+                <Field.Root>
+                  <Field.Label>ID</Field.Label>
+                  <DebouncedTextInputWithVariablesButton
+                    defaultValue={options?.user?.id}
+                    onValueChange={(id: string) => {
+                      onOptionsChange({
+                        ...options,
+                        user: { ...options?.user, id },
+                      });
+                    }}
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Name</Field.Label>
+                  <DebouncedTextInputWithVariablesButton
+                    defaultValue={options?.user?.name}
+                    onValueChange={(name: string) => {
+                      onOptionsChange({
+                        ...options,
+                        user: { ...options?.user, name },
+                      });
+                    }}
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Email</Field.Label>
+                  <DebouncedTextInputWithVariablesButton
+                    defaultValue={options?.user?.email}
+                    onValueChange={(email: string) => {
+                      onOptionsChange({
+                        ...options,
+                        user: { ...options?.user, email },
+                      });
+                    }}
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Avatar URL</Field.Label>
+                  <DebouncedTextInputWithVariablesButton
+                    defaultValue={options?.user?.avatarUrl}
+                    onValueChange={(avatarUrl: string) => {
+                      onOptionsChange({
+                        ...options,
+                        user: { ...options?.user, avatarUrl },
+                      });
+                    }}
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Phone number</Field.Label>
+                  <DebouncedTextInputWithVariablesButton
+                    defaultValue={options?.user?.phoneNumber}
+                    onValueChange={(phoneNumber: string) => {
+                      onOptionsChange({
+                        ...options,
+                        user: { ...options?.user, phoneNumber },
+                      });
+                    }}
+                  />
+                </Field.Root>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion.Root>
         </>
       )}
     </Stack>

@@ -1,36 +1,35 @@
+import { Flex, SlideFade, Stack, useColorModeValue } from "@chakra-ui/react";
+import { createId } from "@paralleldrive/cuid2";
+import { useTranslate } from "@tolgee/react";
+import type {
+  Item,
+  ItemIndices,
+} from "@typebot.io/blocks-core/schemas/items/schema";
+import type { CardsItem } from "@typebot.io/blocks-inputs/cards/schema";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Popover } from "@typebot.io/ui/components/Popover";
+import { Settings01Icon } from "@typebot.io/ui/icons/Settings01Icon";
+import { cn } from "@typebot.io/ui/lib/cn";
+import { cx } from "@typebot.io/ui/lib/cva";
+import { useState } from "react";
 import { ImageOrPlaceholder } from "@/components/ImageOrPlaceholder";
 import { ImageUploadContent } from "@/components/ImageUploadContent/ImageUploadContent";
+import {
+  MultiLineEditable,
+  type MultiLineEditableProps,
+} from "@/components/MultiLineEditable";
+import {
+  SingleLineEditable,
+  type SingleLineEditableProps,
+} from "@/components/SingleLineEditable";
 import {
   GhostableItem,
   StacksWithGhostableItems,
 } from "@/components/StackWithGhostableItems";
-import { Editable } from "@/components/editable";
-import { SettingsIcon } from "@/components/icons";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { BlockSourceEndpoint } from "@/features/graph/components/endpoints/BlockSourceEndpoint";
 import { PlaceholderNode } from "@/features/graph/components/nodes/PlaceholderNode";
 import { useGraph } from "@/features/graph/providers/GraphProvider";
-import {
-  Flex,
-  IconButton,
-  Popover,
-  PopoverAnchor,
-  PopoverArrow,
-  PopoverBody,
-  PopoverContent,
-  Portal,
-  SlideFade,
-  Stack,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { createId } from "@paralleldrive/cuid2";
-import { useTranslate } from "@tolgee/react";
-import type { Item } from "@typebot.io/blocks-core/schemas/items/schema";
-import type { ItemIndices } from "@typebot.io/blocks-core/schemas/items/schema";
-import type { CardsItem } from "@typebot.io/blocks-inputs/cards/schema";
-import { cn } from "@typebot.io/ui/lib/cn";
-import { cx } from "@typebot.io/ui/lib/cva";
-import { useRef, useState } from "react";
 import { CardsItemSettings } from "./CardsItemSettings";
 
 type Props = {
@@ -52,10 +51,6 @@ export const CardsItemNode = ({
   const { typebot } = useTypebot();
   const { updateItem, deleteItemPath } = useTypebot();
   const { openedNodeId, setOpenedNodeId } = useGraph();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const arrowColor = useColorModeValue("white", "gray.900");
-
-  const handleMouseDown = (e: React.MouseEvent) => e.stopPropagation();
 
   const updateTitle = (value: string | null | undefined) => {
     updateItem(indices, {
@@ -99,51 +94,41 @@ export const CardsItemNode = ({
   };
 
   return (
-    <Popover
-      placement="right"
-      isLazy
+    <Popover.Root
       isOpen={openedNodeId === item.id}
-      closeOnBlur={false}
+      onOpen={(event) => {
+        if (event?.type === "click") return;
+        setOpenedNodeId(item.id);
+      }}
+      onClose={() => setOpenedNodeId(undefined)}
     >
-      <PopoverAnchor>
-        <Stack gap={0} justify="center" w="full">
-          <StacksWithGhostableItems gapPixel={8}>
-            <GhostableItem
-              ghostLabel="Add image"
-              onGhostClick={() => {
-                updateImage(undefined);
-              }}
-            >
-              {item.imageUrl !== null ? (
-                <Popover
-                  isLazy
-                  placement="right"
-                  isOpen={
-                    openedNodeId === `${item.id}-${indices.itemIndex}-image`
-                  }
-                  closeOnBlur={false}
-                >
-                  <PopoverAnchor>
-                    <ImageOrPlaceholder
-                      w="full"
-                      h="110px"
-                      flexShrink={0}
-                      _hover={{
-                        filter: "brightness(0.95)",
-                      }}
-                      onClick={() => {
-                        setOpenedNodeId(
-                          `${item.id}-${indices.itemIndex}-image`,
-                        );
-                      }}
-                      transition="filter 0.2s ease"
-                      src={item.imageUrl ?? undefined}
-                      roundedBottom={0}
-                    />
-                  </PopoverAnchor>
-                  <Portal>
-                    <PopoverContent p="4" w="500px">
-                      <PopoverArrow bgColor={arrowColor} />
+      <Popover.Trigger
+        render={(props) => (
+          <Stack {...props} gap={0} justify="center" w="full">
+            <StacksWithGhostableItems gapPixel={8}>
+              <GhostableItem
+                ghostLabel="Add image"
+                onGhostClick={() => {
+                  updateImage(undefined);
+                }}
+              >
+                {item.imageUrl !== null ? (
+                  <Popover.Root
+                    isOpen={
+                      openedNodeId === `${item.id}-${indices.itemIndex}-image`
+                    }
+                    onOpen={() =>
+                      setOpenedNodeId(`${item.id}-${indices.itemIndex}-image`)
+                    }
+                    onClose={() => setOpenedNodeId(undefined)}
+                  >
+                    <Popover.Trigger>
+                      <ImageOrPlaceholder
+                        className="w-full h-[110px] flex-shrink-0 transition-filter rounded-md hover:brightness-95 rounded-b-none"
+                        src={item.imageUrl ?? undefined}
+                      />
+                    </Popover.Trigger>
+                    <Popover.Popup side="right" className="max-w-[400px]">
                       {typebot && (
                         <ImageUploadContent
                           uploadFileProps={{
@@ -165,168 +150,149 @@ export const CardsItemNode = ({
                           }}
                         />
                       )}
-                    </PopoverContent>
-                  </Portal>
-                </Popover>
-              ) : null}
-            </GhostableItem>
-            <GhostableItem
-              ghostLabel="Add title"
-              onGhostClick={() => {
-                updateTitle(undefined);
-              }}
-            >
-              {item.title !== null ? (
-                <DeletableEditable
-                  className={cx(
-                    "flex-1 text-sm font-semibold px-2",
-                    item.description !== null && "-mb-2",
-                  )}
-                  defaultValue={item.title ?? "Title"}
-                  defaultEdit={item.title === undefined}
-                  onValueCommit={updateTitle}
-                  onDelete={() => updateTitle(null)}
-                >
-                  <Editable.Area>
-                    <Editable.Preview />
-                    <Editable.Input />
-                  </Editable.Area>
-                </DeletableEditable>
-              ) : null}
-            </GhostableItem>
-            <GhostableItem
-              ghostLabel="Add description"
-              onGhostClick={() => {
-                updateDescription(undefined);
-              }}
-            >
-              {item.description !== null ? (
-                <DeletableEditable
-                  className={cx("flex-1 text-xs mb-2 px-2")}
-                  defaultValue={item.description ?? "Description"}
-                  defaultEdit={item.description === undefined}
-                  onValueCommit={updateDescription}
-                  onDelete={() => updateDescription(null)}
-                >
-                  <Editable.Area>
-                    <Editable.Preview />
-                    <Editable.Textarea />
-                  </Editable.Area>
-                </DeletableEditable>
-              ) : null}
-            </GhostableItem>
-          </StacksWithGhostableItems>
-
-          <Stack gap={0} px="2">
-            {item.paths?.map((path, idx) => (
-              <DeletableEditable
-                onDelete={() => deletePath(idx)}
-                key={path.id}
-                onValueCommit={(value) => updatePathText(idx, value)}
-                defaultValue={path.text ?? "Button"}
-                defaultEdit={path.text === undefined}
-                className="relative"
+                    </Popover.Popup>
+                  </Popover.Root>
+                ) : null}
+              </GhostableItem>
+              <GhostableItem
+                ghostLabel="Add title"
+                onGhostClick={() => {
+                  updateTitle(undefined);
+                }}
+                className="mx-2"
               >
-                <Editable.Area
-                  className={cn(
-                    "text-center text-sm",
-                    idx === 0 && "rounded-t-md border border-b-0",
-                    idx !== 0 && "border border-b-0",
-                    idx === (item.paths?.length ?? 1) - 1 &&
-                      "rounded-b-md border-b",
-                  )}
-                >
-                  <Editable.Preview className="w-full" />
-                  <Editable.Input className="border-white" />
-                </Editable.Area>
-                <BlockSourceEndpoint
-                  source={{
-                    blockId,
-                    itemId: item.id,
-                    pathId: path.id,
-                  }}
-                  groupId={groupId}
-                  pos="absolute"
-                  right="-57px"
-                  bottom="-2px"
-                  pointerEvents="all"
-                />
-              </DeletableEditable>
-            ))}
-            <PlaceholderNode
-              hitboxYExtensionPixels={5}
-              expandedHeightPixels={30}
-              initialPaddingPixel={0}
-              expandedPaddingPixel={0}
-              roundedTop={0}
-              fontSize="xs"
-              fontWeight="medium"
-              onClick={addPath}
-            >
-              Add button
-            </PlaceholderNode>
-          </Stack>
+                {item.title !== null ? (
+                  <SingleLineDeletableEditable
+                    className={cx(
+                      "flex-1 text-sm font-semibold px-2",
+                      item.description !== null && "-mb-2",
+                    )}
+                    defaultValue={item.title ?? "Title"}
+                    defaultEdit={item.title === undefined}
+                    onValueCommit={updateTitle}
+                    onDelete={() => updateTitle(null)}
+                  />
+                ) : null}
+              </GhostableItem>
+              <GhostableItem
+                ghostLabel="Add description"
+                onGhostClick={() => {
+                  updateDescription(undefined);
+                }}
+                className="mx-2"
+              >
+                {item.description !== null ? (
+                  <MultiLineDeletableEditable
+                    className={cx("flex-1 text-xs mb-2 px-2")}
+                    defaultValue={item.description ?? "Description"}
+                    defaultEdit={item.description === undefined}
+                    onValueCommit={updateDescription}
+                    onDelete={() => updateDescription(null)}
+                  />
+                ) : null}
+              </GhostableItem>
+            </StacksWithGhostableItems>
 
-          <SlideFade
-            offsetY="5px"
-            offsetX="-5px"
-            in={isMouseOver}
-            style={{
-              position: "absolute",
-              right: "-0.25rem",
-              top: "-0.25rem",
-              zIndex: 3,
-            }}
-            unmountOnExit
-          >
-            <Flex bgColor={useColorModeValue("white", "gray.900")} rounded="md">
-              <IconButton
-                aria-label={t("blocks.inputs.button.openSettings.ariaLabel")}
-                icon={<SettingsIcon />}
-                variant="ghost"
-                size="xs"
-                shadow="md"
-                onClick={() => setOpenedNodeId(item.id)}
-              />
-            </Flex>
-          </SlideFade>
-        </Stack>
-      </PopoverAnchor>
-      <Portal>
-        <PopoverContent pos="relative" onMouseDown={handleMouseDown}>
-          <PopoverArrow bgColor={arrowColor} />
-          <PopoverBody
-            py="6"
-            overflowY="auto"
-            maxH="400px"
-            shadow="md"
-            ref={ref}
-          >
-            <CardsItemSettings
-              options={item.options}
-              onSettingsChange={updateItemSettings}
-            />
-          </PopoverBody>
-        </PopoverContent>
-      </Portal>
-    </Popover>
+            <Stack gap={0} px="2">
+              {item.paths?.map((path, idx) => (
+                <SingleLineDeletableEditable
+                  onDelete={() => deletePath(idx)}
+                  key={path.id}
+                  onValueCommit={(value) => updatePathText(idx, value)}
+                  defaultValue={path.text ?? "Button"}
+                  defaultEdit={path.text === undefined}
+                  className={cn("relative")}
+                  common={{
+                    className: cn(
+                      "justify-center text-center text-sm relative border-gray-6 rounded-none",
+                      idx === 0 && "rounded-t-md border-b-0",
+                      idx !== 0 && "border border-b-0",
+                      idx === (item.paths?.length ?? 1) - 1 &&
+                        "rounded-b-md border-b",
+                    ),
+                  }}
+                >
+                  <BlockSourceEndpoint
+                    source={{
+                      blockId,
+                      itemId: item.id,
+                      pathId: path.id,
+                    }}
+                    groupId={groupId}
+                    pos="absolute"
+                    right="-57px"
+                    bottom="-2px"
+                    pointerEvents="all"
+                  />
+                </SingleLineDeletableEditable>
+              ))}
+              <PlaceholderNode
+                hitboxYExtensionPixels={5}
+                expandedHeightPixels={30}
+                initialPaddingPixel={0}
+                expandedPaddingPixel={0}
+                roundedTop={0}
+                fontSize="xs"
+                fontWeight="medium"
+                onClick={addPath}
+              >
+                Add button
+              </PlaceholderNode>
+            </Stack>
+
+            <SlideFade
+              offsetY="5px"
+              offsetX="-5px"
+              in={isMouseOver}
+              style={{
+                position: "absolute",
+                right: "-0.25rem",
+                top: "-0.25rem",
+                zIndex: 3,
+              }}
+              unmountOnExit
+            >
+              <Flex
+                bgColor={useColorModeValue("white", "gray.900")}
+                rounded="md"
+              >
+                <Button
+                  aria-label={t("blocks.inputs.button.openSettings.ariaLabel")}
+                  variant="ghost"
+                  size="icon"
+                  className="shadow-md"
+                  onClick={() => setOpenedNodeId(item.id)}
+                >
+                  <Settings01Icon />
+                </Button>
+              </Flex>
+            </SlideFade>
+          </Stack>
+        )}
+      />
+      <Popover.Popup side="right" className="p-4">
+        <CardsItemSettings
+          options={item.options}
+          onSettingsChange={updateItemSettings}
+        />
+      </Popover.Popup>
+    </Popover.Root>
   );
 };
 
-const DeletableEditable = ({
+const SingleLineDeletableEditable = ({
   defaultValue,
-  children,
   className,
   defaultEdit,
+  children,
+  preview,
+  input,
+  common,
   onValueCommit,
   onDelete,
-}: {
+}: Omit<SingleLineEditableProps, "value"> & {
   defaultValue: string;
-  children: React.ReactNode;
-  className?: string;
-  defaultEdit: boolean;
   onDelete: () => void;
-  onValueCommit: (value: string) => void;
 }) => {
   const [value, setValue] = useState(defaultValue);
 
@@ -335,15 +301,50 @@ const DeletableEditable = ({
   };
 
   return (
-    <Editable.Root
+    <SingleLineEditable
       className={className}
       value={value}
       defaultEdit={defaultEdit}
-      onValueChange={({ value }) => setValue(value)}
+      input={{
+        ...input,
+        onValueChange: setValue,
+        onKeyDownCapture: handleKeyPress,
+      }}
+      common={common}
+      preview={preview}
       onValueCommit={() => onValueCommit(value)}
-      onKeyDownCapture={handleKeyPress}
     >
       {children}
-    </Editable.Root>
+    </SingleLineEditable>
+  );
+};
+
+const MultiLineDeletableEditable = ({
+  defaultValue,
+  className,
+  defaultEdit,
+  onValueCommit,
+  onDelete,
+}: Omit<MultiLineEditableProps, "value"> & {
+  defaultValue: string;
+  onDelete: () => void;
+}) => {
+  const [value, setValue] = useState(defaultValue);
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Backspace" && value === "") onDelete();
+  };
+
+  return (
+    <MultiLineEditable
+      className={className}
+      value={value}
+      defaultEdit={defaultEdit}
+      input={{
+        onValueChange: setValue,
+        onKeyDownCapture: handleKeyPress,
+      }}
+      onValueCommit={() => onValueCommit(value)}
+    />
   );
 };

@@ -1,6 +1,6 @@
+import { Leaf01Icon } from "@typebot.io/ui/icons/Leaf01Icon";
 import { TextLink } from "@/components/link";
 import { stripeClimateUrl } from "@/constants";
-import { LeafIcon } from "@typebot.io/ui/icons/LeafIcon";
 
 export const PricingHeading = () => (
   <div className="flex flex-col gap-8 items-start">
@@ -19,7 +19,7 @@ export const PricingHeading = () => (
 
 const ClimatePledgeCard = () => (
   <div className="flex items-center gap-4 p-4 bg-gray-1 rounded-xl border border-gray-6 max-w-4xl">
-    <LeafIcon className="size-6 flex-shrink-0" />
+    <Leaf01Icon className="size-6 flex-shrink-0" />
     <p className="text-gray-11 text-sm">
       Typebot is contributing 1% of your subscription to remove CO₂ from the
       atmosphere.{" "}

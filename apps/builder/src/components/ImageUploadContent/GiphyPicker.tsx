@@ -2,8 +2,8 @@ import { Flex, Stack, Text } from "@chakra-ui/react";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import { Grid } from "@giphy/react-components";
 import { env } from "@typebot.io/env";
-import React, { useState } from "react";
-import { TextInput } from "../inputs";
+import { useState } from "react";
+import { DebouncedTextInput } from "../inputs/DebouncedTextInput";
 import { GiphyLogo } from "../logos/GiphyLogo";
 
 type GiphySearchFormProps = {
@@ -26,14 +26,12 @@ export const GiphyPicker = ({ onSubmit }: GiphySearchFormProps) => {
   ) : (
     <Stack spacing={4} pt="2">
       <Flex align="center">
-        <TextInput
+        <DebouncedTextInput
           autoFocus
           placeholder="Search..."
-          onChange={setInputValue}
-          withVariableButton={false}
-          width="full"
+          onValueChange={setInputValue}
         />
-        <GiphyLogo w="100px" />
+        <GiphyLogo className="w-24" />
       </Flex>
       <Flex overflowY="auto" maxH="400px">
         <Grid

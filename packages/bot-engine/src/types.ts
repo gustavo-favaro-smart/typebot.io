@@ -4,7 +4,10 @@ import type {
 } from "@typebot.io/chat-api/schemas";
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import type { Prisma } from "@typebot.io/prisma/types";
-import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
+import type {
+  SetVariableHistoryItem,
+  VariableWithUnknowValue,
+} from "@typebot.io/variables/schemas";
 
 export type ExecuteLogicResponse = {
   outgoingEdgeId: string | undefined | null;
@@ -13,7 +16,7 @@ export type ExecuteLogicResponse = {
 } & Pick<ContinueChatResponse, "clientSideActions" | "logs">;
 
 export type ExecuteIntegrationResponse = {
-  outgoingEdgeId: string | undefined;
+  outgoingEdgeId: string | undefined | null;
   newSessionState?: SessionState;
   startTimeShouldBeUpdated?: boolean;
   customEmbedBubble?: CustomEmbedBubble;
@@ -24,6 +27,7 @@ export type SuccessReply = {
   status: "success";
   content: string;
   outgoingEdgeId?: string;
+  variablesToUpdate?: VariableWithUnknowValue[];
 };
 
 export type SkipReply = {

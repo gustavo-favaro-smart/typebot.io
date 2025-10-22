@@ -1,4 +1,3 @@
-import { authenticatedProcedure } from "@/helpers/server/trpc";
 import { TRPCError } from "@trpc/server";
 import { computeResultTranscript } from "@typebot.io/bot-engine/computeResultTranscript";
 import { typebotInSessionStateSchema } from "@typebot.io/chat-session/schemas";
@@ -7,6 +6,7 @@ import type { Answer } from "@typebot.io/results/schemas/answers";
 import { SessionStore } from "@typebot.io/runtime-session-store";
 import { isReadTypebotForbidden } from "@typebot.io/typebot/helpers/isReadTypebotForbidden";
 import { z } from "@typebot.io/zod";
+import { authenticatedProcedure } from "@/helpers/server/trpc";
 
 export const getResultTranscript = authenticatedProcedure
   .meta({
@@ -53,12 +53,15 @@ export const getResultTranscript = authenticatedProcedure
         id: input.typebotId,
       },
       select: {
-        id: true,
-        version: true,
-        groups: true,
-        edges: true,
-        variables: true,
-        events: true,
+        publishedTypebot: {
+          select: {
+            version: true,
+            groups: true,
+            edges: true,
+            variables: true,
+            events: true,
+          },
+        },
         workspace: {
           select: {
             isSuspended: true,
@@ -79,14 +82,17 @@ export const getResultTranscript = authenticatedProcedure
       },
     });
 
-    if (!typebot || (await isReadTypebotForbidden(typebot, user)))
+    if (
+      !typebot?.publishedTypebot ||
+      (await isReadTypebotForbidden(typebot, user))
+    )
       throw new TRPCError({ code: "NOT_FOUND", message: "Typebot not found" });
 
     // Fetch result data
     const result = await prisma.result.findUnique({
       where: {
         id: input.resultId,
-        typebotId: typebot.id,
+        typebotId: input.typebotId,
       },
       select: {
         answers: {
@@ -148,7 +154,10 @@ export const getResultTranscript = authenticatedProcedure
       }));
 
     const transcript = computeResultTranscript({
-      typebot: typebotInSessionStateSchema.parse(typebot),
+      typebot: typebotInSessionStateSchema.parse({
+        ...typebot.publishedTypebot,
+        id: input.typebotId,
+      }),
       answers,
       setVariableHistory,
       visitedEdges,

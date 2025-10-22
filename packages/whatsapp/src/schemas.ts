@@ -1,7 +1,14 @@
 import { ComparisonOperators } from "@typebot.io/conditions/constants";
 import { z } from "@typebot.io/zod";
 
-const mediaSchema = z.object({ link: z.string() });
+const mediaSchema = z
+  .object({
+    link: z.string().optional(),
+    id: z.string().optional(),
+  })
+  .refine((data) => data.link || data.id, {
+    message: "Either link or id must be provided",
+  });
 
 const headerSchema = z
   .object({
@@ -218,15 +225,18 @@ export const incomingMessageSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-const incomingErrors = z.object({
+const whatsAppError = z.object({
   code: z.number(),
   title: z.string(),
+  message: z.string().optional(),
   error_data: z.object({ details: z.string() }),
 });
+export type WhatsAppIncomingError = z.infer<typeof whatsAppError>;
 
 const incomingStatuses = z.object({
   recipient_id: z.string(),
-  errors: z.array(incomingErrors).optional(),
+  // Most likely something with the outbound message
+  errors: z.array(whatsAppError).optional(),
 });
 
 export const whatsAppWebhookRequestBodySchema = z.object({
@@ -251,6 +261,8 @@ export const whatsAppWebhookRequestBodySchema = z.object({
               .optional(),
             messages: z.array(incomingMessageSchema).optional(),
             statuses: z.array(incomingStatuses).optional(),
+            // Something wrong about the inbound message
+            errors: z.array(whatsAppError).optional(),
           }),
         }),
       ),

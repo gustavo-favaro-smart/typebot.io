@@ -1,12 +1,12 @@
-import { DropdownList } from "@/components/DropdownList";
-import type { TableListItemProps } from "@/components/TableList";
-import { TextInput } from "@/components/inputs";
-import { VariableSearchInput } from "@/components/inputs/VariableSearchInput";
 import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { ComparisonOperators } from "@typebot.io/conditions/constants";
 import type { Comparison } from "@typebot.io/conditions/schemas";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
+import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import type { TableListItemProps } from "@/components/TableList";
 
 export const ComparisonItem = ({
   item,
@@ -20,7 +20,7 @@ export const ComparisonItem = ({
   };
 
   const handleSelectComparisonOperator = (
-    comparisonOperator: ComparisonOperators,
+    comparisonOperator: ComparisonOperators | undefined,
   ) => {
     if (comparisonOperator === item.comparisonOperator) return;
     onItemChange({ ...item, comparisonOperator });
@@ -32,14 +32,13 @@ export const ComparisonItem = ({
 
   return (
     <Stack p="4" rounded="md" flex="1" borderWidth="1px">
-      <VariableSearchInput
+      <VariablesCombobox
         initialVariableId={item.variableId}
         onSelectVariable={handleSelectVariable}
-        placeholder={t("variables.search")}
       />
-      <DropdownList
-        currentItem={item.comparisonOperator}
-        onItemSelect={handleSelectComparisonOperator}
+      <BasicSelect
+        value={item.comparisonOperator}
+        onChange={handleSelectComparisonOperator}
         items={Object.values(ComparisonOperators)}
         placeholder={t(
           "blocks.inputs.button.buttonSettings.displayCondition.selectOperator.label",
@@ -47,9 +46,9 @@ export const ComparisonItem = ({
       />
       {item.comparisonOperator !== ComparisonOperators.IS_SET &&
         item.comparisonOperator !== ComparisonOperators.IS_EMPTY && (
-          <TextInput
+          <DebouncedTextInputWithVariablesButton
             defaultValue={item.value ?? ""}
-            onChange={handleChangeValue}
+            onValueChange={handleChangeValue}
             placeholder={parseValuePlaceholder(item.comparisonOperator)}
           />
         )}

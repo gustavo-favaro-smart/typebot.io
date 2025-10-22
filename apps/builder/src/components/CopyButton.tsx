@@ -1,6 +1,6 @@
-import { Button, type ButtonProps, useClipboard } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
-import React, { useEffect } from "react";
+import { Button, type ButtonProps } from "@typebot.io/ui/components/Button";
+import { useCopyToClipboard } from "@typebot.io/ui/hooks/useCopyToClipboard";
 
 interface CopyButtonProps extends ButtonProps {
   textToCopy: string;
@@ -11,27 +11,27 @@ interface CopyButtonProps extends ButtonProps {
   };
 }
 
-export const CopyButton = (props: CopyButtonProps) => {
-  const { textToCopy, onCopied, ...buttonProps } = props;
-  const { hasCopied, onCopy, setValue } = useClipboard(textToCopy);
+export const CopyButton = ({
+  textToCopy,
+  onCopied,
+  text,
+  ...buttonProps
+}: CopyButtonProps) => {
+  const { copied, copy } = useCopyToClipboard();
   const { t } = useTranslate();
-
-  useEffect(() => {
-    setValue(textToCopy);
-  }, [setValue, textToCopy]);
 
   return (
     <Button
-      isDisabled={hasCopied}
+      disabled={copied}
       onClick={() => {
-        onCopy();
+        copy(textToCopy);
         if (onCopied) onCopied();
       }}
+      variant="secondary"
+      size="xs"
       {...buttonProps}
     >
-      {!hasCopied
-        ? (props.text?.copy ?? t("copy"))
-        : (props.text?.copied ?? t("copied"))}
+      {!copied ? (text?.copy ?? t("copy")) : (text?.copied ?? t("copied"))}
     </Button>
   );
 };

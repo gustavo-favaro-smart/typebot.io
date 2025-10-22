@@ -1,4 +1,11 @@
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
+import { chatsLimits, seatsLimits } from "@typebot.io/billing/constants";
+import { formatPrice } from "@typebot.io/billing/helpers/formatPrice";
+import { parseNumberWithCommas } from "@typebot.io/lib/utils";
+import { Button } from "@typebot.io/ui/components/Button";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Infinity01Icon } from "@typebot.io/ui/icons/Infinity01Icon";
+import { TickIcon } from "@typebot.io/ui/icons/TickIcon";
+import { cn } from "@typebot.io/ui/lib/cn";
 import {
   Table,
   TableBody,
@@ -8,13 +15,6 @@ import {
   TableRoot,
   TableRow,
 } from "@/components/table";
-import { chatsLimits, seatsLimits } from "@typebot.io/billing/constants";
-import { formatPrice } from "@typebot.io/billing/helpers/formatPrice";
-import { parseNumberWithCommas } from "@typebot.io/lib/utils";
-import { Button } from "@typebot.io/ui/components/Button";
-import { CheckIcon } from "@typebot.io/ui/icons/CheckIcon";
-import { InfinityIcon } from "@typebot.io/ui/icons/InfinityIcon";
-import { cn } from "@typebot.io/ui/lib/cn";
 import { chatsTooltip } from "./constants";
 
 type Props = {
@@ -244,13 +244,13 @@ export const PlanComparisonTables = ({ onChatsTiersClick }: Props) => (
 
 const CheckedTableCell = () => (
   <TableCell>
-    <CheckIcon className="size-4" />
+    <TickIcon className="size-4" />
   </TableCell>
 );
 
 const InfinityTableCell = () => (
   <TableCell>
-    <InfinityIcon className="size-4" />
+    <Infinity01Icon className="size-4" />
   </TableCell>
 );
 

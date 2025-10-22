@@ -1,9 +1,10 @@
-import { SetVariableLabel } from "@/components/SetVariableLabel";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import { Stack, Tag, Text, chakra } from "@chakra-ui/react";
+import { Stack, Text } from "@chakra-ui/react";
 import type { SetVariableBlock } from "@typebot.io/blocks-logic/setVariable/schema";
 import { byId } from "@typebot.io/lib/utils";
+import { Badge } from "@typebot.io/ui/components/Badge";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { SetVariableLabel } from "@/components/SetVariableLabel";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 
 export const SetVariableContent = ({ block }: { block: SetVariableBlock }) => {
   const { typebot } = useTypebot();
@@ -103,7 +104,8 @@ const Expression = ({
     case "Yesterday": {
       return (
         <Text as="span">
-          {variableName} = <Tag colorScheme="purple">System.{options.type}</Tag>
+          {variableName} ={" "}
+          <Badge colorScheme="purple">System.{options.type}</Badge>
         </Text>
       );
     }
@@ -114,7 +116,7 @@ const Expression = ({
       return (
         <Text as="span">
           {variableName} ={" "}
-          <Tag colorScheme="purple">WhatsApp.{options.type}</Tag>
+          <Badge colorScheme="purple">WhatsApp.{options.type}</Badge>
         </Text>
       );
   }
@@ -135,16 +137,17 @@ const CustomExpression = ({
   if (expressionDescription)
     return (
       <Text as="span">
-        {variableName} = <Tag colorScheme="gray">{expressionDescription}</Tag>
+        {variableName} ={" "}
+        <Badge colorScheme="gray">{expressionDescription}</Badge>
       </Text>
     );
   if (isCode)
     return (
       <Stack spacing={1}>
         <Text>{variableName} =</Text>
-        <chakra.pre bgColor="gray.100" rounded="md" p="2" noOfLines={6}>
+        <pre className="bg-gray-3 rounded-md p-2 line-clamp-6">
           {expression}
-        </chakra.pre>
+        </pre>
       </Stack>
     );
   return (

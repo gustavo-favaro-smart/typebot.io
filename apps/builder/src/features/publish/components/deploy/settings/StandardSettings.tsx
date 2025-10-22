@@ -1,0 +1,110 @@
+import {
+  Flex,
+  Heading,
+  HStack,
+  Stack,
+  type StackProps,
+  Text,
+} from "@chakra-ui/react";
+import { Field } from "@typebot.io/ui/components/Field";
+import { Input } from "@typebot.io/ui/components/Input";
+import { Switch } from "@typebot.io/ui/components/Switch";
+import { useEffect, useState } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+
+type Props = {
+  onUpdateWindowSettings: (windowSettings: {
+    heightLabel: string;
+    widthLabel?: string;
+  }) => void;
+} & StackProps;
+
+export const StandardSettings = ({
+  onUpdateWindowSettings,
+  ...props
+}: Props) => {
+  const [isFullscreenChecked, setIsFullscreenChecked] = useState(false);
+  const [inputValues, setInputValues] = useState({
+    widthValue: "100",
+    widthType: "%",
+    heightValue: "600",
+    heightType: "px",
+  });
+
+  useEffect(() => {
+    onUpdateWindowSettings({
+      widthLabel: isFullscreenChecked
+        ? undefined
+        : inputValues.widthValue + inputValues.widthType,
+      heightLabel: isFullscreenChecked
+        ? "100vh"
+        : inputValues.heightValue + inputValues.heightType,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValues, isFullscreenChecked]);
+
+  const handleWidthTypeSelect = (widthType: string) =>
+    setInputValues({ ...inputValues, widthType });
+  const handleHeightTypeSelect = (heightType: string) =>
+    setInputValues({ ...inputValues, heightType });
+
+  return (
+    <Stack {...props} spacing={4}>
+      <Heading size="sm">Window settings</Heading>
+
+      <Stack pl="4" spacing={4}>
+        <Field.Root className="flex-row items-center">
+          <Switch
+            checked={isFullscreenChecked}
+            onCheckedChange={() => setIsFullscreenChecked(!isFullscreenChecked)}
+          />
+          <Field.Label>Set to fullscreen</Field.Label>
+        </Field.Root>
+        {!isFullscreenChecked && (
+          <>
+            <Flex justify="space-between" align="center">
+              <Text>Width</Text>
+              <HStack>
+                <Input
+                  onValueChange={(value) =>
+                    setInputValues({
+                      ...inputValues,
+                      widthValue: value,
+                    })
+                  }
+                  className="w-[70px]"
+                  value={inputValues.widthValue}
+                />
+                <BasicSelect
+                  items={["px", "%"]}
+                  onChange={handleWidthTypeSelect}
+                  value={inputValues.widthType}
+                />
+              </HStack>
+            </Flex>
+            <Flex justify="space-between" align="center">
+              <Text>Height</Text>
+              <HStack>
+                <Input
+                  onValueChange={(value) =>
+                    setInputValues({
+                      ...inputValues,
+                      heightValue: value,
+                    })
+                  }
+                  className="w-[70px]"
+                  value={inputValues.heightValue}
+                />
+                <BasicSelect
+                  items={["px", "%"]}
+                  onChange={handleHeightTypeSelect}
+                  value={inputValues.heightType}
+                />
+              </HStack>
+            </Flex>
+          </>
+        )}
+      </Stack>
+    </Stack>
+  );
+};

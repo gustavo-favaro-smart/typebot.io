@@ -1,10 +1,10 @@
-import { TextInput } from "@/components/inputs";
 import { Stack } from "@chakra-ui/react";
 import type {
   HttpRequest,
   HttpRequestBlock,
 } from "@typebot.io/blocks-integrations/httpRequest/schema";
-import React, { useRef } from "react";
+import { useRef } from "react";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { HttpRequestAdvancedConfigForm } from "./HttpRequestAdvancedConfigForm";
 
 type Props = {
@@ -38,10 +38,10 @@ export const HttpRequestSettings = ({
   return (
     <Stack spacing={0}>
       <Stack spacing={4}>
-        <TextInput
+        <DebouncedTextInputWithVariablesButton
           placeholder="Paste URL..."
           defaultValue={options?.webhook?.url}
-          onChange={updateUrl}
+          onValueChange={updateUrl}
         />
         <HttpRequestAdvancedConfigForm
           blockId={blockId}

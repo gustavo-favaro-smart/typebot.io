@@ -1,4 +1,3 @@
-import { authenticateUser } from "@/helpers/authenticateUser";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { env } from "@typebot.io/env";
@@ -10,6 +9,7 @@ import { isTypebotVersionAtLeastV6 } from "@typebot.io/schemas/helpers/isTypebot
 import { isReadTypebotForbidden } from "@typebot.io/typebot/helpers/isReadTypebotForbidden";
 import { resumeWhatsAppFlow } from "@typebot.io/whatsapp/resumeWhatsAppFlow";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { authenticateUser } from "@/helpers/authenticateUser";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
@@ -55,21 +55,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const chatSession = await getSession(`wa-preview-${phone}`);
 
-    if (!chatSession?.state.whatsApp)
+    if (!chatSession?.state?.whatsApp)
       return badRequest(res, "Expected whatsapp chat session");
 
     await resumeWhatsAppFlow({
-      receivedMessage: {
-        from: chatSession.id.split("-").at(-1)!,
-        timestamp: new Date().toISOString(),
-        type: "webhook",
-        webhook: {
-          data:
-            typeof req.body === "string"
-              ? JSON.stringify({ data: JSON.parse(req.body) })
-              : JSON.stringify({ data: req.body }, null, 2),
+      receivedMessages: [
+        {
+          from: chatSession.id.split("-").at(-1)!,
+          timestamp: new Date().toISOString(),
+          type: "webhook",
+          webhook: {
+            data:
+              typeof req.body === "string"
+                ? JSON.stringify({ data: JSON.parse(req.body) })
+                : JSON.stringify({ data: req.body }, null, 2),
+          },
         },
-      },
+      ],
       sessionId: chatSession.id,
       callFrom: "webhook",
     });

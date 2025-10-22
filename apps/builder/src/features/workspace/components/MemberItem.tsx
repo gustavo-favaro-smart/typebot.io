@@ -1,18 +1,8 @@
-import {
-  Avatar,
-  HStack,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Stack,
-  Tag,
-  Text,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Avatar, HStack, Stack, Text } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { WorkspaceRole } from "@typebot.io/prisma/enum";
-import React from "react";
+import { Badge } from "@typebot.io/ui/components/Badge";
+import { Menu } from "@typebot.io/ui/components/Menu";
 import { convertWorkspaceRoleToReadable } from "./AddMemberForm";
 
 type Props = {
@@ -43,13 +33,8 @@ export const MemberItem = ({
   const handleMemberClick = () => onSelectNewRole(WorkspaceRole.MEMBER);
 
   return (
-    <Menu placement="bottom-end" isLazy>
-      <MenuButton
-        _hover={{
-          bg: useColorModeValue("gray.100", "gray.700"),
-        }}
-        borderRadius="md"
-      >
+    <Menu.Root>
+      <Menu.Trigger className="hover:bg-gray-2 rounded-md transition-colors">
         <MemberIdentityContent
           email={email}
           name={name}
@@ -57,21 +42,21 @@ export const MemberItem = ({
           isGuest={isGuest}
           tag={convertWorkspaceRoleToReadable(role)}
         />
-      </MenuButton>
+      </Menu.Trigger>
       {!isMe && canEdit && (
-        <MenuList shadow="md">
-          <MenuItem onClick={handleAdminClick}>
+        <Menu.Popup>
+          <Menu.Item onClick={handleAdminClick}>
             {convertWorkspaceRoleToReadable(WorkspaceRole.ADMIN)}
-          </MenuItem>
-          <MenuItem onClick={handleMemberClick}>
+          </Menu.Item>
+          <Menu.Item onClick={handleMemberClick}>
             {convertWorkspaceRoleToReadable(WorkspaceRole.MEMBER)}
-          </MenuItem>
-          <MenuItem color="red.500" onClick={onDeleteClick}>
+          </Menu.Item>
+          <Menu.Item className="text-red-10" onClick={onDeleteClick}>
             {t("remove")}
-          </MenuItem>
-        </MenuList>
+          </Menu.Item>
+        </Menu.Popup>
       )}
-    </Menu>
+    </Menu.Root>
   );
 };
 
@@ -110,12 +95,8 @@ export const MemberIdentityContent = ({
         </Stack>
       </HStack>
       <HStack flexShrink={0}>
-        {isGuest && (
-          <Tag color="gray.400" data-testid="tag">
-            {t("pending")}
-          </Tag>
-        )}
-        <Tag data-testid="tag">{tag}</Tag>
+        {isGuest && <Badge className="text-gray-8">{t("pending")}</Badge>}
+        <Badge>{tag}</Badge>
       </HStack>
     </HStack>
   );

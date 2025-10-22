@@ -1,8 +1,11 @@
-import { getTestAsset } from "@/test/utils/playwright";
 import { createId } from "@paralleldrive/cuid2";
 import test, { expect } from "@playwright/test";
 import { env } from "@typebot.io/env";
-import { importTypebotInDatabase } from "@typebot.io/playwright/databaseActions";
+import {
+  importTypebotInDatabase,
+  injectFakeResults,
+} from "@typebot.io/playwright/databaseActions";
+import { getTestAsset } from "@/test/utils/playwright";
 
 test("Big groups should work as expected", async ({ page }) => {
   const typebotId = createId();
@@ -29,4 +32,13 @@ test("Big groups should work as expected", async ({ page }) => {
   await expect(page.locator('text="Baptiste" >> nth=1')).toBeVisible();
   await expect(page.locator('text="26" >> nth=1')).toBeVisible();
   await expect(page.locator('text="Yes" >> nth=1')).toBeVisible();
+});
+
+test("Seed bot with lots of results", async () => {
+  const typebotId = createId();
+  await importTypebotInDatabase(getTestAsset("typebots/lots-results.json"), {
+    id: typebotId,
+    publicId: `${typebotId}-public`,
+  });
+  await injectFakeResults({ typebotId, count: 2000, isChronological: true });
 });

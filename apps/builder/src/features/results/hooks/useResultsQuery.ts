@@ -1,6 +1,6 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
 import type { timeFilterValues } from "@/features/analytics/constants";
 import { trpc } from "@/lib/queryClient";
-import { useInfiniteQuery } from "@tanstack/react-query";
 
 type Params = {
   timeFilter: (typeof timeFilterValues)[number];
@@ -14,6 +14,7 @@ export const useResultsQuery = ({ timeFilter, typebotId, onError }: Params) => {
   const { data, error, fetchNextPage, hasNextPage, refetch } = useInfiniteQuery(
     trpc.results.getResults.infiniteQueryOptions(
       {
+        cursor: 0,
         timeZone,
         timeFilter,
         typebotId,

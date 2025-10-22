@@ -1,7 +1,6 @@
 import {
   type GridProps,
   SimpleGrid,
-  Skeleton,
   Stat,
   StatLabel,
   StatNumber,
@@ -9,9 +8,9 @@ import {
 } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import type { Stats } from "@typebot.io/results/schemas/answers";
-import React from "react";
+import { Skeleton } from "@typebot.io/ui/components/Skeleton";
 import type { timeFilterValues } from "../constants";
-import { TimeFilterDropdown } from "./TimeFilterDropdown";
+import { TimeFilterSelect } from "./TimeFilterSelect";
 
 const computeCompletionRate =
   (notAvailableLabel: string) =>
@@ -40,23 +39,23 @@ export const StatsCards = ({
       alignItems="center"
       {...props}
     >
-      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md">
+      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md" borderWidth={1}>
         <StatLabel>{t("analytics.viewsLabel")}</StatLabel>
         {stats ? (
           <StatNumber>{stats.totalViews}</StatNumber>
         ) : (
-          <Skeleton w="50%" h="10px" mt="2" />
+          <div className="w-1/2 h-2 mt-2 bg-gray-1 animate-pulse" />
         )}
       </Stat>
-      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md">
+      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md" borderWidth={1}>
         <StatLabel>{t("analytics.startsLabel")}</StatLabel>
         {stats ? (
           <StatNumber>{stats.totalStarts}</StatNumber>
         ) : (
-          <Skeleton w="50%" h="10px" mt="2" />
+          <Skeleton className="w-1/2 h-2 mt-2" />
         )}
       </Stat>
-      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md">
+      <Stat bgColor={bg} p="4" rounded="md" boxShadow="md" borderWidth={1}>
         <StatLabel>{t("analytics.completionRateLabel")}</StatLabel>
         {stats ? (
           <StatNumber>
@@ -66,14 +65,13 @@ export const StatsCards = ({
             )}
           </StatNumber>
         ) : (
-          <Skeleton w="50%" h="10px" mt="2" />
+          <Skeleton className="w-1/2 h-2 mt-2" />
         )}
       </Stat>
-      <TimeFilterDropdown
+      <TimeFilterSelect
         timeFilter={timeFilter}
         onTimeFilterChange={onTimeFilterChange}
-        backgroundColor={bg}
-        boxShadow="md"
+        className="shadow-md bg-gray-1"
       />
     </SimpleGrid>
   );

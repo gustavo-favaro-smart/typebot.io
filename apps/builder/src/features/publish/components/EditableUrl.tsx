@@ -1,18 +1,7 @@
+import { Text } from "@chakra-ui/react";
+import { useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
-import { EditIcon } from "@/components/icons";
-import {
-  Button,
-  type ButtonProps,
-  Editable,
-  EditableInput,
-  EditablePreview,
-  HStack,
-  Text,
-  Tooltip,
-  useEditableControls,
-} from "@chakra-ui/react";
-import { useTranslate } from "@tolgee/react";
-import React, { useState } from "react";
+import { SingleLineEditable } from "@/components/SingleLineEditable";
 
 type EditableUrlProps = {
   hostname: string;
@@ -27,7 +16,6 @@ export const EditableUrl = ({
   isValid,
   onPathnameChange,
 }: EditableUrlProps) => {
-  const { t } = useTranslate();
   const [value, setValue] = useState(pathname);
 
   const handleSubmit = async (newPathname: string) => {
@@ -37,44 +25,25 @@ export const EditableUrl = ({
   };
 
   return (
-    <Editable
-      as={HStack}
-      spacing={3}
-      value={value}
-      onChange={setValue}
-      onSubmit={handleSubmit}
-    >
-      <HStack spacing={1}>
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <Text flexShrink={0}>{hostname}/</Text>
-        <Tooltip label={t("edit")}>
-          <EditablePreview
-            mx={1}
-            borderWidth="1px"
-            px={3}
-            rounded="md"
-            cursor="text"
-            display="flex"
-            fontWeight="medium"
-          />
-        </Tooltip>
-        <EditableInput px={2} />
-      </HStack>
-
-      <HStack>
-        <EditButton size="xs" />
-        <CopyButton size="xs" textToCopy={`${hostname}/${value ?? ""}`} />
-      </HStack>
-    </Editable>
-  );
-};
-
-const EditButton = (props: ButtonProps) => {
-  const { t } = useTranslate();
-  const { isEditing, getEditButtonProps } = useEditableControls();
-
-  return isEditing ? null : (
-    <Button leftIcon={<EditIcon />} {...props} {...getEditButtonProps()}>
-      {t("edit")}
-    </Button>
+        <SingleLineEditable
+          value={value}
+          className="font-medium"
+          common={{
+            className: "px-2",
+          }}
+          input={{
+            onValueChange: setValue,
+          }}
+          preview={{
+            className: "border-gray-7 cursor-text",
+          }}
+          onValueCommit={handleSubmit}
+        />
+      </div>
+      <CopyButton textToCopy={`${hostname}/${value ?? ""}`} />
+    </div>
   );
 };

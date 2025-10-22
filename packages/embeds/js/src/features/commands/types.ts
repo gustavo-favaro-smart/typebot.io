@@ -14,7 +14,9 @@ export type CommandData = CommandArgs & {
           | "close"
           | "hidePreviewMessage"
           | "unmount"
-          | "reload";
+          | "reload"
+          | "reset"
+          | "submitInput";
       }
     | ShowMessageCommandData
     | SetPrefilledVariablesCommandData

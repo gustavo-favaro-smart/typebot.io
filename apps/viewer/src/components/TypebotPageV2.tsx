@@ -1,3 +1,12 @@
+import { isNotDefined, isNotEmpty } from "@typebot.io/lib/utils";
+import type { AnswerInput } from "@typebot.io/results/schemas/answers";
+import { defaultSettings } from "@typebot.io/settings/constants";
+import type { PublicTypebot } from "@typebot.io/typebot/schemas/publicTypebot";
+import type { Typebot } from "@typebot.io/typebot/schemas/typebot";
+import type { VariableWithValue } from "@typebot.io/variables/schemas";
+import { TypebotViewer } from "bot-engine";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { upsertAnswerQuery } from "@/features/answers/queries/upsertAnswerQuery";
 import { createResultQuery } from "@/features/results/queries/createResultQuery";
 import { updateResultQuery } from "@/features/results/queries/updateResultQuery";
@@ -6,20 +15,6 @@ import {
   setResultInSession,
 } from "@/helpers/sessionStorage";
 import { gtmBodyElement } from "@/lib/google-tag-manager";
-import {
-  injectCustomHeadCode,
-  isDefined,
-  isNotDefined,
-  isNotEmpty,
-} from "@typebot.io/lib/utils";
-import type { AnswerInput } from "@typebot.io/results/schemas/answers";
-import { defaultSettings } from "@typebot.io/settings/constants";
-import type { PublicTypebot } from "@typebot.io/typebot/schemas/publicTypebot";
-import type { Typebot } from "@typebot.io/typebot/schemas/typebot";
-import type { VariableWithValue } from "@typebot.io/variables/schemas";
-import { TypebotViewer } from "bot-engine";
-import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
 import { ErrorPage } from "./ErrorPage";
 import { SEO } from "./Seo";
 
@@ -28,24 +23,15 @@ export type TypebotPageProps = {
     typebot: Pick<Typebot, "name" | "isClosed" | "isArchived" | "publicId">;
   };
   url: string;
-  isIE: boolean;
-  customHeadCode: string | null;
 };
 
-export const TypebotPageV2 = ({
-  publishedTypebot,
-  isIE,
-  url,
-  customHeadCode,
-}: TypebotPageProps) => {
+export const TypebotPageV2 = ({ publishedTypebot, url }: TypebotPageProps) => {
   const { asPath, push } = useRouter();
   const [showTypebot, setShowTypebot] = useState(false);
   const [predefinedVariables, setPredefinedVariables] = useState<{
     [key: string]: string;
   }>();
-  const [error, setError] = useState<Error | undefined>(
-    isIE ? new Error("Internet explorer is not supported") : undefined,
-  );
+  const [error, setError] = useState<Error | undefined>(undefined);
   const [resultId, setResultId] = useState<string | undefined>();
   const [variableUpdateQueue, setVariableUpdateQueue] = useState<
     VariableWithValue[][]
@@ -62,7 +48,6 @@ export const TypebotPageV2 = ({
     });
     setPredefinedVariables(predefinedVariables);
     initializeResult().then();
-    if (isDefined(customHeadCode)) injectCustomHeadCode(customHeadCode);
     const gtmId = publishedTypebot.settings.metadata?.googleTagManagerId;
     if (isNotEmpty(gtmId)) document.body.prepend(gtmBodyElement(gtmId));
   }, []);

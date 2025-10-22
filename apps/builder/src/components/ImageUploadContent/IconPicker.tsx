@@ -1,16 +1,15 @@
 import {
-  Button,
   HStack,
-  Image,
   SimpleGrid,
   Stack,
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
+import { Button } from "@typebot.io/ui/components/Button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColorPicker } from "../ColorPicker";
-import { TextInput } from "../inputs";
+import { DebouncedTextInput } from "../inputs/DebouncedTextInput";
 import { iconNames } from "./iconNames";
 
 const batchSize = 200;
@@ -108,16 +107,15 @@ export const IconPicker = ({ onIconSelected }: Props) => {
   return (
     <Stack>
       <HStack>
-        <TextInput
+        <DebouncedTextInput
           placeholder={t("emojiList.searchInput.placeholder")}
-          onChange={searchIcon}
-          withVariableButton={false}
+          onValueChange={searchIcon}
           debounceTimeout={300}
         />
         <ColorPicker
           value={selectedColor}
           onColorChange={updateColor}
-          portalled={false}
+          side="right"
         />
       </HStack>
 
@@ -135,12 +133,9 @@ export const IconPicker = ({ onIconSelected }: Props) => {
             >
               {recentIconNames.map((iconName) => (
                 <Button
-                  size="sm"
-                  variant={"ghost"}
-                  fontSize="xl"
-                  w="38px"
-                  h="38px"
-                  p="2"
+                  size="icon"
+                  variant="ghost"
+                  className="text-xl w-8 h-8 p-1.5"
                   key={iconName}
                   onClick={() => selectIcon(iconName)}
                 >
@@ -164,12 +159,9 @@ export const IconPicker = ({ onIconSelected }: Props) => {
           >
             {displayedIconNames.map((iconName) => (
               <Button
-                size="sm"
-                variant={"ghost"}
-                fontSize="xl"
-                w="38px"
-                h="38px"
-                p="2"
+                size="icon"
+                variant="ghost"
+                className="w-8 h-8 p-1.5"
                 key={iconName}
                 onClick={() => selectIcon(iconName)}
               >
@@ -205,5 +197,5 @@ const Icon = ({ name, color }: { name: string; color: string }) => {
 
   if (!svg) return null;
 
-  return <Image src={dataUri} alt={name} w="full" h="full" />;
+  return <img src={dataUri} alt={name} className="size-full" />;
 };

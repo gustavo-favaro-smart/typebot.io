@@ -1,12 +1,14 @@
-import { UploadButton } from "@/components/ImageUploadContent/UploadButton";
-import { TextInput } from "@/components/inputs";
-import { SwitchWithLabel } from "@/components/inputs/SwitchWithLabel";
-import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
-import { Button, Flex, HStack, Stack, Text } from "@chakra-ui/react";
+import { Flex, HStack, Stack, Text } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { defaultAudioBubbleContent } from "@typebot.io/blocks-bubbles/audio/constants";
 import type { AudioBubbleBlock } from "@typebot.io/blocks-bubbles/audio/schema";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Field } from "@typebot.io/ui/components/Field";
+import { Switch } from "@typebot.io/ui/components/Switch";
 import { useState } from "react";
+import { UploadButton } from "@/components/ImageUploadContent/UploadButton";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
 
 type Props = {
   uploadFileProps: FilePathUploadProps;
@@ -31,14 +33,14 @@ export const AudioBubbleForm = ({
     <Stack>
       <HStack>
         <Button
-          variant={currentTab === "upload" ? "solid" : "ghost"}
+          variant={currentTab === "upload" ? "outline" : "ghost"}
           onClick={() => setCurrentTab("upload")}
           size="sm"
         >
           {t("editor.blocks.bubbles.audio.settings.upload.label")}
         </Button>
         <Button
-          variant={currentTab === "link" ? "solid" : "ghost"}
+          variant={currentTab === "link" ? "outline" : "ghost"}
           onClick={() => setCurrentTab("link")}
           size="sm"
         >
@@ -53,7 +55,6 @@ export const AudioBubbleForm = ({
                 fileType="audio"
                 filePathProps={uploadFileProps}
                 onFileUploaded={updateUrl}
-                colorScheme="orange"
               >
                 {t("editor.blocks.bubbles.audio.settings.chooseFile.label")}
               </UploadButton>
@@ -61,12 +62,12 @@ export const AudioBubbleForm = ({
           )}
           {currentTab === "link" && (
             <>
-              <TextInput
+              <DebouncedTextInputWithVariablesButton
                 placeholder={t(
                   "editor.blocks.bubbles.audio.settings.worksWith.placeholder",
                 )}
                 defaultValue={content?.url ?? ""}
-                onChange={updateUrl}
+                onValueChange={updateUrl}
               />
               <Text fontSize="sm" color="gray.400" textAlign="center">
                 {t("editor.blocks.bubbles.audio.settings.worksWith.text")}
@@ -74,14 +75,18 @@ export const AudioBubbleForm = ({
             </>
           )}
         </Stack>
-        <SwitchWithLabel
-          label={t("editor.blocks.bubbles.audio.settings.autoplay.label")}
-          initialValue={
-            content?.isAutoplayEnabled ??
-            defaultAudioBubbleContent.isAutoplayEnabled
-          }
-          onCheckChange={updateAutoPlay}
-        />
+        <Field.Root>
+          <Field.Label>
+            {t("editor.blocks.bubbles.audio.settings.autoplay.label")}
+          </Field.Label>
+          <Switch
+            checked={
+              content?.isAutoplayEnabled ??
+              defaultAudioBubbleContent.isAutoplayEnabled
+            }
+            onCheckedChange={updateAutoPlay}
+          />
+        </Field.Root>
       </Stack>
     </Stack>
   );

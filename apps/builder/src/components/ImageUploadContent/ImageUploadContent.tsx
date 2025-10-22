@@ -1,13 +1,17 @@
-import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
-import { Button, Flex, HStack, Stack } from "@chakra-ui/react";
+import { Flex, HStack, Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
+import { Button } from "@typebot.io/ui/components/Button";
 import { useState } from "react";
-import { TextInput } from "../inputs/TextInput";
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
+import {
+  DebouncedTextInput,
+  DebouncedTextInputWithVariablesButton,
+} from "../inputs/DebouncedTextInput";
+import { EmojiSearchableList } from "./emoji/EmojiSearchableList";
 import { GiphyPicker } from "./GiphyPicker";
 import { IconPicker } from "./IconPicker";
 import { UnsplashPicker } from "./UnsplashPicker";
 import { UploadButton } from "./UploadButton";
-import { EmojiSearchableList } from "./emoji/EmojiSearchableList";
 
 type PermanentTabs = "link" | "upload";
 type AdditionalTabs = "giphy" | "emoji" | "unsplash" | "icon";
@@ -58,7 +62,7 @@ export const ImageUploadContent = ({
       <HStack>
         {displayedTabs.includes("link") && (
           <Button
-            variant={currentTab === "link" ? "solid" : "ghost"}
+            variant={currentTab === "link" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("link")}
             size="sm"
           >
@@ -67,7 +71,7 @@ export const ImageUploadContent = ({
         )}
         {displayedTabs.includes("upload") && (
           <Button
-            variant={currentTab === "upload" ? "solid" : "ghost"}
+            variant={currentTab === "upload" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("upload")}
             size="sm"
           >
@@ -76,7 +80,7 @@ export const ImageUploadContent = ({
         )}
         {displayedTabs.includes("emoji") && (
           <Button
-            variant={currentTab === "emoji" ? "solid" : "ghost"}
+            variant={currentTab === "emoji" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("emoji")}
             size="sm"
           >
@@ -85,7 +89,7 @@ export const ImageUploadContent = ({
         )}
         {displayedTabs.includes("giphy") && (
           <Button
-            variant={currentTab === "giphy" ? "solid" : "ghost"}
+            variant={currentTab === "giphy" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("giphy")}
             size="sm"
           >
@@ -94,7 +98,7 @@ export const ImageUploadContent = ({
         )}
         {displayedTabs.includes("unsplash") && (
           <Button
-            variant={currentTab === "unsplash" ? "solid" : "ghost"}
+            variant={currentTab === "unsplash" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("unsplash")}
             size="sm"
           >
@@ -103,7 +107,7 @@ export const ImageUploadContent = ({
         )}
         {displayedTabs.includes("icon") && (
           <Button
-            variant={currentTab === "icon" ? "solid" : "ghost"}
+            variant={currentTab === "icon" ? "outline" : "ghost"}
             onClick={() => setCurrentTab("icon")}
             size="sm"
           >
@@ -186,7 +190,6 @@ const UploadFileContent = ({
         fileType="image"
         filePathProps={uploadFileProps}
         onFileUploaded={onNewUrl}
-        colorScheme="orange"
       >
         {t("editor.header.uploadTab.uploadButton.label")}
       </UploadButton>
@@ -206,20 +209,26 @@ const EmbedLinkContent = ({
 }) => {
   const { t } = useTranslate();
 
-  return (
-    <Stack py="2">
-      <TextInput
+  if (withVariableButton) {
+    return (
+      <DebouncedTextInputWithVariablesButton
         placeholder={t("editor.header.linkTab.searchInputPlaceholder.label")}
-        onChange={onNewUrl}
+        onValueChange={onNewUrl}
         defaultValue={defaultUrl ?? ""}
-        withVariableButton={withVariableButton}
-        onKeyDown={(e) => {
-          if (e.key === "Backspace" && e.currentTarget.value === "") {
-            onDelete?.();
-          }
-        }}
       />
-    </Stack>
+    );
+  }
+  return (
+    <DebouncedTextInput
+      placeholder={t("editor.header.linkTab.searchInputPlaceholder.label")}
+      onValueChange={onNewUrl}
+      defaultValue={defaultUrl ?? ""}
+      onKeyDown={(e) => {
+        if (e.key === "Backspace" && e.currentTarget.value === "") {
+          onDelete?.();
+        }
+      }}
+    />
   );
 };
 

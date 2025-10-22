@@ -131,6 +131,7 @@ export const webhookHandler = async (
             },
             select: {
               isPastDue: true,
+              isQuarantined: true,
               id: true,
               plan: true,
               members: {
@@ -202,17 +203,52 @@ export const webhookHandler = async (
           }
 
           if (
+            subscription.status === "unpaid" &&
+            previous &&
+            previous.status !== "unpaid" &&
+            !existingWorkspace.isQuarantined
+          ) {
+            await trackEvents(
+              existingWorkspace.members.map((m) => ({
+                name: "Workspace unpaid",
+                workspaceId: existingWorkspace.id,
+                userId: m.userId,
+              })),
+            );
+            if (!subscription.cancel_at_period_end)
+              await stripe.subscriptions.update(subscription.id, {
+                cancel_at_period_end: true,
+              });
+            await prisma.workspace.updateMany({
+              where: {
+                id: existingWorkspace.id,
+              },
+              data: {
+                isQuarantined: true,
+              },
+            });
+
+            return res.send({ message: "Workspace quarantined" });
+          }
+
+          if (
             subscription.status === "active" &&
             previous &&
-            previous.status === "past_due" &&
+            (previous.status === "past_due" || previous?.status === "unpaid") &&
             existingWorkspace.isPastDue
           ) {
+            if (subscription.cancel_at_period_end)
+              await stripe.subscriptions.update(subscription.id, {
+                cancel_at_period_end: false,
+              });
+
             await prisma.workspace.updateMany({
               where: {
                 id: existingWorkspace.id,
               },
               data: {
                 isPastDue: false,
+                isQuarantined: false,
               },
             });
 
@@ -349,7 +385,7 @@ export const webhookHandler = async (
           return res.send({ message: "workspace downgraded in DB" });
         }
         default: {
-          return res.status(304).send({ message: "event not handled" });
+          return res.status(204).send({ message: "Event not handled" });
         }
       }
     } catch (err) {

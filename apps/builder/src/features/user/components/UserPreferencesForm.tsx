@@ -1,22 +1,14 @@
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
-import { SwitchWithRelatedSettings } from "@/components/SwitchWithRelatedSettings";
-import { ChevronDownIcon } from "@/components/icons";
-import { VideoOnboardingPopover } from "@/features/onboarding/components/VideoOnboardingPopover";
-import {
-  Button,
-  HStack,
-  Heading,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Stack,
-} from "@chakra-ui/react";
+import { Heading, HStack, Stack } from "@chakra-ui/react";
 import { useTolgee, useTranslate } from "@tolgee/react";
 import { GraphNavigation } from "@typebot.io/prisma/enum";
+import { Field } from "@typebot.io/ui/components/Field";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Switch } from "@typebot.io/ui/components/Switch";
 import type { GroupTitlesAutoGeneration } from "@typebot.io/user/schemas";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { VideoOnboardingPopover } from "@/features/onboarding/components/VideoOnboardingPopover";
 import { setLocaleInCookies } from "../helpers/setLocaleInCookies";
 import { useUser } from "../hooks/useUser";
 import { AppearanceRadioGroup } from "./AppearanceRadioGroup";
@@ -49,7 +41,7 @@ export const UserPreferencesForm = () => {
     updateUser({ preferredAppAppearance: value });
   };
 
-  const updateLocale = (locale: keyof typeof localeHumanReadable) => () => {
+  const updateLocale = (locale: keyof typeof localeHumanReadable) => {
     updateUser({ preferredLanguage: locale });
 
     setLocaleInCookies(locale);
@@ -85,36 +77,21 @@ export const UserPreferencesForm = () => {
     <Stack spacing={12}>
       <HStack spacing={4}>
         <Heading size="md">{t("account.preferences.language.heading")}</Heading>
-        <Menu>
-          <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-            {currentLanguage
-              ? localeHumanReadable[
-                  currentLanguage as keyof typeof localeHumanReadable
-                ]
-              : "Loading..."}
-          </MenuButton>
-          <MenuList>
-            {Object.keys(localeHumanReadable).map((locale) => (
-              <MenuItem
-                key={locale}
-                onClick={updateLocale(
-                  locale as keyof typeof localeHumanReadable,
-                )}
-              >
-                {
-                  localeHumanReadable[
-                    locale as keyof typeof localeHumanReadable
-                  ]
-                }
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-        {currentLanguage !== "en" && (
-          <MoreInfoTooltip>
-            {t("account.preferences.language.tooltip")}
-          </MoreInfoTooltip>
-        )}
+        <div className="flex items-center">
+          <BasicSelect
+            items={Object.entries(localeHumanReadable).map(([key, value]) => ({
+              label: value,
+              value: key as keyof typeof localeHumanReadable,
+            }))}
+            value={currentLanguage as keyof typeof localeHumanReadable}
+            onChange={updateLocale}
+          />
+          {currentLanguage !== "en" && (
+            <MoreInfoTooltip>
+              {t("account.preferences.language.tooltip")}
+            </MoreInfoTooltip>
+          )}
+        </div>
       </HStack>
       <Stack spacing={6}>
         <Heading size="md">
@@ -140,18 +117,23 @@ export const UserPreferencesForm = () => {
         />
       </Stack>
 
-      <VideoOnboardingPopover.Root
+      <VideoOnboardingPopover
         type="groupTitlesAutoGeneration"
         isEnabled={user?.groupTitlesAutoGeneration?.isEnabled ?? false}
-        placement="top-end"
+        side="top"
       >
-        <SwitchWithRelatedSettings
-          label={t("account.preferences.groupTitlesAutoGeneration.label")}
-          initialValue={user?.groupTitlesAutoGeneration?.isEnabled}
-          onCheckChange={(isEnabled) => {
-            updateGroupTitlesGenParams({ isEnabled });
-          }}
-        >
+        <Field.Container>
+          <Field.Root className="flex-row items-center">
+            <Switch
+              checked={user?.groupTitlesAutoGeneration?.isEnabled}
+              onCheckedChange={(isEnabled) => {
+                updateGroupTitlesGenParams({ isEnabled });
+              }}
+            />
+            <Field.Label>
+              {t("account.preferences.groupTitlesAutoGeneration.label")}
+            </Field.Label>
+          </Field.Root>
           {user?.groupTitlesAutoGeneration && (
             <GroupTitlesAutoGenForm
               userId={user.id}
@@ -159,8 +141,8 @@ export const UserPreferencesForm = () => {
               onChange={updateGroupTitlesGenParams}
             />
           )}
-        </SwitchWithRelatedSettings>
-      </VideoOnboardingPopover.Root>
+        </Field.Container>
+      </VideoOnboardingPopover>
     </Stack>
   );
 };

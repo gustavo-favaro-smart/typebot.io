@@ -35,9 +35,12 @@ export const trackAndReportYesterdaysResults = async () => {
     },
   });
 
+  console.log("🔍 Found", recentWorkspaces.length, "workspaces");
+
   let resultsSum = 0;
   const newResultsCollectedEvents: TelemetryEvent[] = [];
   for (const workspace of recentWorkspaces) {
+    console.log("Getting total results for workspace", workspace.id);
     const results = await prisma.result.groupBy({
       by: ["typebotId"],
       _count: {

@@ -1,32 +1,23 @@
-import { DropdownList } from "@/components/DropdownList";
-import { TextInput } from "@/components/inputs";
-import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
-import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  HStack,
-  Select,
-  Stack,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { HStack, Stack, Text, useDisclosure } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import {
-  PaymentProvider,
   defaultPaymentInputOptions,
+  PaymentProvider,
 } from "@typebot.io/blocks-inputs/payment/constants";
 import type {
   PaymentAddress,
   PaymentInputBlock,
 } from "@typebot.io/blocks-inputs/payment/schema";
-import React, { type ChangeEvent } from "react";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Field } from "@typebot.io/ui/components/Field";
+import { useMemo } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
+import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { currencies } from "../currencies";
+import { CreateStripeCredentialsDialog } from "./CreateStripeCredentialsDialog";
 import { PaymentAddressSettings } from "./PaymentAddressSettings";
-import { StripeConfigModal } from "./StripeConfigModal";
 
 type Props = {
   options: PaymentInputBlock["options"];
@@ -38,7 +29,7 @@ export const PaymentSettings = ({ options, onOptionsChange }: Props) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { t } = useTranslate();
 
-  const updateProvider = (provider: PaymentProvider) => {
+  const updateProvider = (provider: PaymentProvider | undefined) => {
     onOptionsChange({
       ...options,
       provider,
@@ -58,10 +49,10 @@ export const PaymentSettings = ({ options, onOptionsChange }: Props) => {
       amount,
     });
 
-  const updateCurrency = (e: ChangeEvent<HTMLSelectElement>) =>
+  const updateCurrency = (currency: string | undefined) =>
     onOptionsChange({
       ...options,
-      currency: e.target.value,
+      currency,
     });
 
   const updateName = (name: string) =>
@@ -106,14 +97,24 @@ export const PaymentSettings = ({ options, onOptionsChange }: Props) => {
       additionalInformation: { ...options?.additionalInformation, address },
     });
 
+  const providers = useMemo(
+    () =>
+      Object.values(PaymentProvider).map((provider) => ({
+        label: provider,
+        value: provider,
+      })),
+    [],
+  );
+
   return (
     <Stack spacing={4}>
       <Stack>
         <Text>{t("blocks.inputs.payment.settings.provider.label")}</Text>
-        <DropdownList
-          onItemSelect={updateProvider}
-          items={Object.values(PaymentProvider)}
-          currentItem={options?.provider ?? defaultPaymentInputOptions.provider}
+        <BasicSelect
+          items={providers}
+          onChange={updateProvider}
+          value={options?.provider}
+          defaultValue={defaultPaymentInputOptions.provider}
         />
       </Stack>
       <Stack>
@@ -135,89 +136,110 @@ export const PaymentSettings = ({ options, onOptionsChange }: Props) => {
         )}
       </Stack>
       <HStack>
-        <TextInput
-          label={t("blocks.inputs.payment.settings.priceAmount.label")}
-          onChange={updateAmount}
-          defaultValue={options?.amount}
-          placeholder="30.00"
-        />
+        <Field.Root>
+          <Field.Label>
+            {t("blocks.inputs.payment.settings.priceAmount.label")}
+          </Field.Label>
+          <DebouncedTextInputWithVariablesButton
+            onValueChange={updateAmount}
+            defaultValue={options?.amount}
+            placeholder="30.00"
+          />
+        </Field.Root>
         <Stack>
           <Text>{t("blocks.inputs.payment.settings.currency.label")}</Text>
-          <Select
-            placeholder="Select option"
-            value={options?.currency ?? defaultPaymentInputOptions.currency}
+          <BasicSelect
+            items={currencies.map((currency) => currency.code)}
             onChange={updateCurrency}
-          >
-            {currencies.map((currency) => (
-              <option value={currency.code} key={currency.code}>
-                {currency.code}
-              </option>
-            ))}
-          </Select>
+            value={options?.currency}
+            defaultValue={defaultPaymentInputOptions.currency}
+          />
         </Stack>
       </HStack>
-      <TextInput
-        label={t("blocks.inputs.settings.button.label")}
-        onChange={updateButtonLabel}
-        defaultValue={
-          options?.labels?.button ?? defaultPaymentInputOptions.labels.button
-        }
-      />
-      <TextInput
-        label={t("blocks.inputs.payment.settings.successMessage.label")}
-        onChange={updateSuccessLabel}
-        defaultValue={
-          options?.labels?.success ?? defaultPaymentInputOptions.labels.success
-        }
-      />
-      <Accordion allowToggle>
-        <AccordionItem>
-          <AccordionButton justifyContent="space-between">
+      <Field.Root>
+        <Field.Label>{t("blocks.inputs.settings.button.label")}</Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          onValueChange={updateButtonLabel}
+          defaultValue={
+            options?.labels?.button ?? defaultPaymentInputOptions.labels.button
+          }
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          {t("blocks.inputs.payment.settings.successMessage.label")}
+        </Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          onValueChange={updateSuccessLabel}
+          defaultValue={
+            options?.labels?.success ??
+            defaultPaymentInputOptions.labels.success
+          }
+        />
+      </Field.Root>
+      <Accordion.Root>
+        <Accordion.Item>
+          <Accordion.Trigger>
             {t("blocks.inputs.payment.settings.additionalInformation.label")}
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel py={4} as={Stack} spacing="6">
-            <TextInput
-              label={t("blocks.inputs.settings.description.label")}
-              defaultValue={options?.additionalInformation?.description}
-              onChange={updateDescription}
-              placeholder={t(
-                "blocks.inputs.payment.settings.additionalInformation.description.placeholder.label",
-              )}
-            />
-            <TextInput
-              label={t(
-                "blocks.inputs.payment.settings.additionalInformation.name.label",
-              )}
-              defaultValue={options?.additionalInformation?.name}
-              onChange={updateName}
-              placeholder="John Smith"
-            />
-            <TextInput
-              label={t(
-                "blocks.inputs.payment.settings.additionalInformation.email.label",
-              )}
-              defaultValue={options?.additionalInformation?.email}
-              onChange={updateEmail}
-              placeholder="john@gmail.com"
-            />
-            <TextInput
-              label={t(
-                "blocks.inputs.payment.settings.additionalInformation.phone.label",
-              )}
-              defaultValue={options?.additionalInformation?.phoneNumber}
-              onChange={updatePhoneNumber}
-              placeholder="+33XXXXXXXXX"
-            />
+          </Accordion.Trigger>
+          <Accordion.Panel>
+            <Field.Root>
+              <Field.Label>
+                {t("blocks.inputs.settings.description.label")}
+              </Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                defaultValue={options?.additionalInformation?.description}
+                onValueChange={updateDescription}
+                placeholder={t(
+                  "blocks.inputs.payment.settings.additionalInformation.description.placeholder.label",
+                )}
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                {t(
+                  "blocks.inputs.payment.settings.additionalInformation.name.label",
+                )}
+              </Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                defaultValue={options?.additionalInformation?.name}
+                onValueChange={updateName}
+                placeholder="John Smith"
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                {t(
+                  "blocks.inputs.payment.settings.additionalInformation.email.label",
+                )}
+              </Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                defaultValue={options?.additionalInformation?.email}
+                onValueChange={updateEmail}
+                placeholder="john@gmail.com"
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                {t(
+                  "blocks.inputs.payment.settings.additionalInformation.phone.label",
+                )}
+              </Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                defaultValue={options?.additionalInformation?.phoneNumber}
+                onValueChange={updatePhoneNumber}
+                placeholder="+33XXXXXXXXX"
+              />
+            </Field.Root>
             <PaymentAddressSettings
               address={options?.additionalInformation?.address}
               onAddressChange={updateAddress}
             />
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion.Root>
 
-      <StripeConfigModal
+      <CreateStripeCredentialsDialog
         isOpen={isOpen}
         onClose={onClose}
         onNewCredentials={updateCredentials}

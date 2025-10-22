@@ -1,13 +1,13 @@
-import { Card } from "@/components/Card";
-import { ButtonLink } from "@/components/link";
-import { registerUrl } from "@/constants";
-import { BracesIcon } from "@typebot.io/ui/icons/BracesIcon";
+import { CodeIcon } from "@typebot.io/ui/icons/CodeIcon";
 import { DatabaseIcon } from "@typebot.io/ui/icons/DatabaseIcon";
-import { FileCodeIcon } from "@typebot.io/ui/icons/FileCodeIcon";
-import { LinkIcon } from "@typebot.io/ui/icons/LinkIcon";
+import { DocumentCodeIcon } from "@typebot.io/ui/icons/DocumentCodeIcon";
+import { Link02Icon } from "@typebot.io/ui/icons/Link02Icon";
 import { UsersIcon } from "@typebot.io/ui/icons/UsersIcon";
 import { ZapIcon } from "@typebot.io/ui/icons/ZapIcon";
 import { cn } from "@typebot.io/ui/lib/cn";
+import { Card } from "@/components/Card";
+import { CtaButtonLink } from "@/components/link";
+import { registerUrl } from "@/constants";
 import bgImage0 from "./assets/0.png";
 import bgImage1 from "./assets/1.png";
 import bgImage2 from "./assets/2.png";
@@ -26,7 +26,7 @@ const bgImageSrcs = [
 
 const cards = [
   {
-    Icon: BracesIcon,
+    Icon: CodeIcon,
     title: "Hidden fields",
     description:
       "Include data in your form URL to segment your user and use its data directly in your form.",
@@ -40,14 +40,14 @@ const cards = [
     rotateCoeff: 12,
   },
   {
-    Icon: LinkIcon,
+    Icon: Link02Icon,
     title: "Link to sub typebots",
     description:
       "For the in-depth analytics lovers who want to see flow with drop-off rate etc.",
     rotateCoeff: -7,
   },
   {
-    Icon: FileCodeIcon,
+    Icon: DocumentCodeIcon,
     title: "Custom code",
     description: "Customize everything with your own Javascript & CSS Code",
     rotateCoeff: -2,
@@ -95,14 +95,13 @@ export const AllFeatures = () => {
           <h2 className="px-4 text-center">
             All the features you need to hack bots building
           </h2>
-          <ButtonLink
-            variant="cta"
+          <CtaButtonLink
             size="lg"
             className="hidden md:inline-flex"
             href={registerUrl}
           >
             Create a bot for free
-          </ButtonLink>
+          </CtaButtonLink>
         </div>
 
         <ul
@@ -138,9 +137,9 @@ export const AllFeatures = () => {
         </ul>
       </div>
       <div className="md:hidden px-4">
-        <ButtonLink variant="cta" size="lg" href={registerUrl}>
+        <CtaButtonLink size="lg" href={registerUrl}>
           Create a bot for free
-        </ButtonLink>
+        </CtaButtonLink>
       </div>
     </div>
   );

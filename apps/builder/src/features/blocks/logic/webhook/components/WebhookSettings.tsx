@@ -1,31 +1,10 @@
-import { CopyButton } from "@/components/CopyButton";
-import { TableList, type TableListItemProps } from "@/components/TableList";
-import { TextLink } from "@/components/TextLink";
-import { CodeEditor } from "@/components/inputs/CodeEditor";
-import { DataVariableInputs } from "@/features/blocks/integrations/httpRequest/components/ResponseMappingInputs";
-import { computeDeepKeysMappingSuggestionList } from "@/features/blocks/integrations/httpRequest/helpers/computeDeepKeysMappingSuggestionList";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import { useUser } from "@/features/user/hooks/useUser";
-import { toast } from "@/lib/toast";
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Button,
-  FormControl,
-  FormHelperText,
-  Input,
-  InputGroup,
-  InputRightElement,
   Stack,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
-  Tag,
   Text,
 } from "@chakra-ui/react";
 import * as Sentry from "@sentry/nextjs";
@@ -33,8 +12,21 @@ import type { ResponseVariableMapping } from "@typebot.io/blocks-integrations/ht
 import type { WebhookBlock } from "@typebot.io/blocks-logic/webhook/schema";
 import { env } from "@typebot.io/env";
 import { parseUnknownError } from "@typebot.io/lib/parseUnknownError";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Badge } from "@typebot.io/ui/components/Badge";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Field } from "@typebot.io/ui/components/Field";
 import usePartySocket from "partysocket/react";
 import { useMemo, useState } from "react";
+import { CodeEditor } from "@/components/inputs/CodeEditor";
+import { CopyInput } from "@/components/inputs/CopyInput";
+import { TableList, type TableListItemProps } from "@/components/TableList";
+import { TextLink } from "@/components/TextLink";
+import { DataVariableInputs } from "@/features/blocks/integrations/httpRequest/components/ResponseMappingInputs";
+import { computeDeepKeysMappingSuggestionList } from "@/features/blocks/integrations/httpRequest/helpers/computeDeepKeysMappingSuggestionList";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useUser } from "@/features/user/hooks/useUser";
+import { toast } from "@/lib/toast";
 
 type Props = {
   blockId: string;
@@ -114,25 +106,11 @@ export const WebhookSettings = ({
         <TabPanel pb="0">
           <Stack spacing="4">
             {typebot && (
-              <FormControl as={Stack}>
-                <InputGroup size="sm">
-                  <Input
-                    type={"text"}
-                    defaultValue={`${urlBase}/web/executeTestWebhook`}
-                  />
-                  <InputRightElement width="60px">
-                    <CopyButton
-                      size="sm"
-                      textToCopy={`${urlBase}/web/executeTestWebhook`}
-                    />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
+              <CopyInput value={`${urlBase}/web/executeTestWebhook`} />
             )}
             <Button
               onClick={listenForTestEvent}
-              colorScheme="orange"
-              isLoading={websocketStatus === "opened"}
+              disabled={websocketStatus === "opened"}
             >
               Listen for test event
             </Button>
@@ -148,7 +126,7 @@ export const WebhookSettings = ({
                   >
                     authenticated
                   </TextLink>{" "}
-                  <Tag>POST</Tag> request to the Test URL...
+                  <Badge>POST</Badge> request to the Test URL...
                 </Text>
               </Stack>
             )}
@@ -158,13 +136,10 @@ export const WebhookSettings = ({
             {(receivedData ||
               (options?.responseVariableMapping &&
                 options.responseVariableMapping.length > 0)) && (
-              <Accordion allowMultiple>
-                <AccordionItem>
-                  <AccordionButton justifyContent="space-between">
-                    Save in variables
-                    <AccordionIcon />
-                  </AccordionButton>
-                  <AccordionPanel pt="4">
+              <Accordion.Root>
+                <Accordion.Item>
+                  <Accordion.Trigger>Save in variables</Accordion.Trigger>
+                  <Accordion.Panel>
                     <TableList<ResponseVariableMapping>
                       initialItems={options?.responseVariableMapping}
                       onItemsChange={updateResponseVariableMapping}
@@ -172,28 +147,19 @@ export const WebhookSettings = ({
                     >
                       {(props) => <ResponseMappingInputs {...props} />}
                     </TableList>
-                  </AccordionPanel>
-                </AccordionItem>
-              </Accordion>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion.Root>
             )}
           </Stack>
         </TabPanel>
         <TabPanel pb="0">
           {typebot && (
-            <FormControl as={Stack}>
-              <InputGroup size="sm">
-                <Input
-                  type={"text"}
-                  defaultValue={`${urlBase}/results/{resultId}/executeWebhook`}
-                />
-                <InputRightElement width="60px">
-                  <CopyButton
-                    size="sm"
-                    textToCopy={`${urlBase}/results/{resultId}/executeWebhook`}
-                  />
-                </InputRightElement>
-              </InputGroup>
-              <FormHelperText mt="0">
+            <Field.Root>
+              <CopyInput
+                value={`${urlBase}/results/{resultId}/executeWebhook`}
+              />
+              <Field.Description>
                 You can easily get the Result ID{" "}
                 <TextLink
                   isExternal
@@ -202,8 +168,8 @@ export const WebhookSettings = ({
                   with a Set variable block
                 </TextLink>
                 .
-              </FormHelperText>
-            </FormControl>
+              </Field.Description>
+            </Field.Root>
           )}
         </TabPanel>
       </TabPanels>

@@ -1,7 +1,10 @@
-import { Icon, type IconProps } from "@chakra-ui/react";
+import { cn } from "@typebot.io/ui/lib/cn";
 
-export const GoogleAnalyticsLogo = (props: IconProps) => (
-  <Icon viewBox="0 0 353 353" {...props}>
+export const GoogleAnalyticsLogo = ({
+  className,
+  ...props
+}: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 353 353" {...props} className={cn("size-4", className)}>
     <g clipPath="url(#clip0_1458_69)">
       <path
         d="M324.433 0H260.155C244.607 0 231.844 12.773 231.844 28.3329V111.474H138.792C123.709 111.474 111.41 123.782 111.41 139.11V232.237H27.6395C12.3241 232.237 0.0253906 244.545 0.0253906 259.873V324.899C0.0253906 340.227 12.3241 352.536 27.6395 353H324.665C340.212 353 352.975 340.227 352.975 324.667V28.3329C352.743 12.773 339.98 0 324.433 0Z"
@@ -50,7 +53,6 @@ export const GoogleAnalyticsLogo = (props: IconProps) => (
     </g>
     <defs>
       <linearGradient
-        id="paint0_linear_1458_69"
         x1="0.0253906"
         y1="176.5"
         x2="352.975"
@@ -61,7 +63,6 @@ export const GoogleAnalyticsLogo = (props: IconProps) => (
         <stop offset="1" stopColor="white" stopOpacity="0" />
       </linearGradient>
       <linearGradient
-        id="paint1_linear_1458_69"
         x1="0.0253906"
         y1="176.5"
         x2="352.975"
@@ -72,7 +73,6 @@ export const GoogleAnalyticsLogo = (props: IconProps) => (
         <stop offset="1" stopColor="white" stopOpacity="0" />
       </linearGradient>
       <linearGradient
-        id="paint2_linear_1458_69"
         x1="172.323"
         y1="172.436"
         x2="344.434"
@@ -83,7 +83,6 @@ export const GoogleAnalyticsLogo = (props: IconProps) => (
         <stop offset="1" stopColor="#BF360C" stopOpacity="0.02" />
       </linearGradient>
       <linearGradient
-        id="paint3_linear_1458_69"
         x1="118.3"
         y1="118.513"
         x2="346.649"
@@ -93,9 +92,9 @@ export const GoogleAnalyticsLogo = (props: IconProps) => (
         <stop stopColor="white" stopOpacity="0.1" />
         <stop offset="1" stopColor="white" stopOpacity="0" />
       </linearGradient>
-      <clipPath id="clip0_1458_69">
+      <clipPath>
         <rect width="353" height="353" fill="white" />
       </clipPath>
     </defs>
-  </Icon>
+  </svg>
 );

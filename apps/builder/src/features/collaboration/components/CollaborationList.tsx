@@ -1,27 +1,18 @@
+import { Flex, HStack, Stack, Text } from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import { CollaborationType } from "@typebot.io/prisma/enum";
+import { Badge } from "@typebot.io/ui/components/Badge";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Input } from "@typebot.io/ui/components/Input";
+import { Skeleton } from "@typebot.io/ui/components/Skeleton";
+import { HardDriveIcon } from "@typebot.io/ui/icons/HardDriveIcon";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { EmojiOrImageIcon } from "@/components/EmojiOrImageIcon";
-import { ChevronLeftIcon } from "@/components/icons";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { toast } from "@/lib/toast";
-import {
-  Button,
-  Flex,
-  HStack,
-  Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Skeleton,
-  SkeletonCircle,
-  Stack,
-  Tag,
-  Text,
-} from "@chakra-ui/react";
-import { useTranslate } from "@tolgee/react";
-import { CollaborationType } from "@typebot.io/prisma/enum";
-import type { FormEvent } from "react";
-import React, { useState } from "react";
 import { useCollaborators } from "../hooks/useCollaborators";
 import { useInvitations } from "../hooks/useInvitations";
 import { deleteCollaboratorQuery } from "../queries/deleteCollaboratorQuery";
@@ -32,13 +23,13 @@ import { updateInvitationQuery } from "../queries/updateInvitationQuery";
 import { CollaboratorItem } from "./CollaboratorButton";
 import { ReadableCollaborationType } from "./ReadableCollaborationType";
 
+type InvitationType = "READ" | "WRITE";
+
 export const CollaborationList = () => {
   const { currentUserMode, workspace } = useWorkspace();
   const { t } = useTranslate();
   const { typebot } = useTypebot();
-  const [invitationType, setInvitationType] = useState<CollaborationType>(
-    CollaborationType.READ,
-  );
+  const [invitationType, setInvitationType] = useState<InvitationType>("READ");
   const [invitationEmail, setInvitationEmail] = useState("");
   const [isSendingInvitation, setIsSendingInvitation] = useState(false);
 
@@ -61,7 +52,7 @@ export const CollaborationList = () => {
     typebotId: typebot?.id,
     onError: (e) =>
       toast({
-        context: t("share.button.popover.invitationsFetch.error.label"),
+        title: t("share.button.popover.invitationsFetch.error.label"),
         description: e.message,
       }),
   });
@@ -76,7 +67,7 @@ export const CollaborationList = () => {
       });
       if (error)
         return toast({
-          context: error.name,
+          title: error.name,
           description: error.message,
         });
       mutateInvitations({
@@ -90,7 +81,7 @@ export const CollaborationList = () => {
     const { error } = await deleteInvitationQuery(typebot?.id, email);
     if (error)
       return toast({
-        context: error.name,
+        title: error.name,
         description: error.message,
       });
     mutateInvitations({
@@ -108,7 +99,7 @@ export const CollaborationList = () => {
       });
       if (error)
         return toast({
-          context: error.name,
+          title: error.name,
           description: error.message,
         });
       mutateCollaborators({
@@ -122,7 +113,7 @@ export const CollaborationList = () => {
     const { error } = await deleteCollaboratorQuery(typebot?.id, userId);
     if (error)
       return toast({
-        context: error.name,
+        title: error.name,
         description: error.message,
       });
     mutateCollaborators({
@@ -143,14 +134,18 @@ export const CollaborationList = () => {
     mutateCollaborators({ collaborators: collaborators ?? [] });
     if (error)
       return toast({
-        context: error.name,
+        title: error.name,
         description: error.message,
       });
     toast({
-      status: "success",
+      type: "success",
       description: t("share.button.popover.invitationSent.successToast.label"),
     });
     setInvitationEmail("");
+  };
+
+  const updateInvitationType = (type: InvitationType) => {
+    setInvitationType(type);
   };
 
   return (
@@ -161,24 +156,25 @@ export const CollaborationList = () => {
           placeholder={t("share.button.popover.inviteInput.placeholder")}
           name="inviteEmail"
           value={invitationEmail}
-          onChange={(e) => setInvitationEmail(e.target.value)}
-          rounded="md"
-          isDisabled={currentUserMode === "guest"}
+          onValueChange={setInvitationEmail}
+          disabled={currentUserMode === "guest"}
         />
 
         {currentUserMode !== "guest" && (
-          <CollaborationTypeMenuButton
-            type={invitationType}
-            onChange={setInvitationType}
+          <BasicSelect
+            size="sm"
+            value={invitationType}
+            onChange={updateInvitationType}
+            items={[
+              { label: "Read", value: CollaborationType.READ },
+              { label: "Write", value: CollaborationType.WRITE },
+            ]}
           />
         )}
         <Button
           size="sm"
-          colorScheme="orange"
-          isLoading={isSendingInvitation}
-          flexShrink={0}
+          disabled={currentUserMode === "guest" || isSendingInvitation}
           type="submit"
-          isDisabled={currentUserMode === "guest"}
         >
           {t("share.button.popover.inviteButton.label")}
         </Button>
@@ -186,14 +182,17 @@ export const CollaborationList = () => {
       {workspace && (
         <Flex py="2" px="4" justifyContent="space-between" alignItems="center">
           <HStack minW={0} spacing={3}>
-            <EmojiOrImageIcon icon={workspace.icon} boxSize="32px" />
+            <EmojiOrImageIcon
+              icon={workspace.icon}
+              defaultIcon={HardDriveIcon}
+            />
             <Text fontSize="15px" noOfLines={1}>
               Everyone at {workspace.name}
             </Text>
           </HStack>
-          <Tag flexShrink={0}>
+          <Badge className="flex-shrink-0">
             <ReadableCollaborationType type={CollaborationType.FULL_ACCESS} />
-          </Tag>
+          </Badge>
         </Flex>
       )}
       {invitations?.map(({ email, type }) => (
@@ -222,44 +221,15 @@ export const CollaborationList = () => {
       {(isCollaboratorsLoading || isInvitationsLoading) && (
         <HStack p="4" justifyContent="space-between">
           <HStack>
-            <SkeletonCircle boxSize="32px" />
+            <Skeleton className="size-8 rounded-full" />
             <Stack>
-              <Skeleton width="130px" h="6px" />
-              <Skeleton width="200px" h="6px" />
+              <Skeleton className="w-32 h-1" />
+              <Skeleton className="w-40 h-1" />
             </Stack>
           </HStack>
-          <Skeleton width="80px" h="10px" />
+          <Skeleton className="w-20 h-2" />
         </HStack>
       )}
     </Stack>
   );
 };
-
-const CollaborationTypeMenuButton = ({
-  type,
-  onChange,
-}: {
-  type: CollaborationType;
-  onChange: (type: CollaborationType) => void;
-}) => (
-  <Menu placement="bottom-end">
-    <MenuButton
-      flexShrink={0}
-      size="sm"
-      as={Button}
-      rightIcon={<ChevronLeftIcon transform={"rotate(-90deg)"} />}
-    >
-      <ReadableCollaborationType type={type} />
-    </MenuButton>
-    <MenuList minW={0}>
-      <Stack maxH={"35vh"} overflowY="auto" spacing="0">
-        <MenuItem onClick={() => onChange(CollaborationType.READ)}>
-          <ReadableCollaborationType type={CollaborationType.READ} />
-        </MenuItem>
-        <MenuItem onClick={() => onChange(CollaborationType.WRITE)}>
-          <ReadableCollaborationType type={CollaborationType.WRITE} />
-        </MenuItem>
-      </Stack>
-    </MenuList>
-  </Menu>
-);

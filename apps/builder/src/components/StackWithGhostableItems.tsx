@@ -1,8 +1,9 @@
-import { useHoverExpandDebounce } from "@/features/graph/hooks/useHoverExpandDebounce";
-import { Button, Stack, type StackProps } from "@chakra-ui/react";
+import { Stack, type StackProps } from "@chakra-ui/react";
 import { isDefined } from "@typebot.io/lib/utils";
-import React, { useMemo } from "react";
-import { createContext, forwardRef, useContext } from "react";
+import { Button } from "@typebot.io/ui/components/Button";
+import { cn } from "@typebot.io/ui/lib/cn";
+import React, { createContext, forwardRef, useContext, useMemo } from "react";
+import { useHoverExpandDebounce } from "@/features/graph/hooks/useHoverExpandDebounce";
 
 const context = createContext<
   | {
@@ -150,10 +151,12 @@ export const GhostableItem = ({
   children,
   ghostLabel,
   onGhostClick,
+  className,
 }: {
   children: React.ReactNode;
   ghostLabel: string;
   onGhostClick?: () => void;
+  className?: string;
 }) => {
   const context = useStackWithGhostableItems();
   if (!context)
@@ -166,9 +169,18 @@ export const GhostableItem = ({
     <>
       {children === null ? (
         <Button
-          h={isExpanded ? "24px" : ghostItemHeight + "px"}
-          transition="all 0.2s ease"
-          fontSize="12px"
+          variant="secondary"
+          style={
+            {
+              "--available-height": isExpanded
+                ? "24px"
+                : ghostItemHeight + "px",
+            } as React.CSSProperties
+          }
+          className={cn(
+            "transition-all duration-200 h-[var(--available-height)] text-xs py-0",
+            className,
+          )}
           onClick={() => {
             onGhostClick?.();
             closeExpanded();

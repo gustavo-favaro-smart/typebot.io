@@ -1,7 +1,5 @@
-import { EditIcon } from "@/components/icons";
-import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { Edit03Icon } from "@typebot.io/ui/icons/Edit03Icon";
 
-export const SetVariableIcon = (props: IconProps) => (
-  <EditIcon color="purple.500" {...props} />
+export const SetVariableIcon = ({ className }: { className?: string }) => (
+  <Edit03Icon className={className} />
 );

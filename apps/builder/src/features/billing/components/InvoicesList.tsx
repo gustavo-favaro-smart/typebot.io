@@ -1,10 +1,6 @@
-import { DownloadIcon, FileIcon } from "@/components/icons";
-import { trpc } from "@/lib/queryClient";
 import {
   Checkbox,
   Heading,
-  IconButton,
-  Skeleton,
   Stack,
   Table,
   TableContainer,
@@ -15,10 +11,12 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslate } from "@tolgee/react";
-import Link from "next/link";
-import React from "react";
+import { Skeleton } from "@typebot.io/ui/components/Skeleton";
+import { Download01Icon } from "@typebot.io/ui/icons/Download01Icon";
+import { FileEmpty02Icon } from "@typebot.io/ui/icons/FileEmpty02Icon";
+import { ButtonLink } from "@/components/ButtonLink";
+import { useInvoicesQuery } from "../hooks/useInvoicesQuery";
 
 type Props = {
   workspaceId: string;
@@ -26,11 +24,7 @@ type Props = {
 
 export const InvoicesList = ({ workspaceId }: Props) => {
   const { t } = useTranslate();
-  const { data, status } = useQuery(
-    trpc.billing.listInvoices.queryOptions({
-      workspaceId,
-    }),
-  );
+  const { data, status } = useInvoicesQuery(workspaceId);
 
   return (
     <Stack spacing={6}>
@@ -53,7 +47,7 @@ export const InvoicesList = ({ workspaceId }: Props) => {
               {data?.invoices.map((invoice) => (
                 <Tr key={invoice.id}>
                   <Td>
-                    <FileIcon />
+                    <FileEmpty02Icon />
                   </Td>
                   <Td>{invoice.id}</Td>
                   <Td>
@@ -64,15 +58,15 @@ export const InvoicesList = ({ workspaceId }: Props) => {
                   <Td>{getFormattedPrice(invoice.amount, invoice.currency)}</Td>
                   <Td>
                     {invoice.url && (
-                      <IconButton
-                        as={Link}
-                        size="xs"
-                        icon={<DownloadIcon />}
+                      <ButtonLink
+                        size="icon"
                         variant="outline"
                         href={invoice.url}
                         target="_blank"
                         aria-label={"Download invoice"}
-                      />
+                      >
+                        <Download01Icon />
+                      </ButtonLink>
                     )}
                   </Td>
                 </Tr>
@@ -84,10 +78,10 @@ export const InvoicesList = ({ workspaceId }: Props) => {
                       <Checkbox isDisabled />
                     </Td>
                     <Td>
-                      <Skeleton h="5px" />
+                      <Skeleton className="h-1" />
                     </Td>
                     <Td>
-                      <Skeleton h="5px" />
+                      <Skeleton className="h-1" />
                     </Td>
                   </Tr>
                 ))}

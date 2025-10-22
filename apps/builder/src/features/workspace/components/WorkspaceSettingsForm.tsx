@@ -1,22 +1,12 @@
-import { ConfirmModal } from "@/components/ConfirmModal";
-import { CopyButton } from "@/components/CopyButton";
-import { EditableEmojiOrImageIcon } from "@/components/EditableEmojiOrImageIcon";
-import { TextInput } from "@/components/inputs";
-import {
-  Button,
-  Flex,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Stack,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Stack, Text, useDisclosure } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
-import React from "react";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Field } from "@typebot.io/ui/components/Field";
+import { HardDriveIcon } from "@typebot.io/ui/icons/HardDriveIcon";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EditableEmojiOrImageIcon } from "@/components/EditableEmojiOrImageIcon";
+import { CopyInput } from "@/components/inputs/CopyInput";
+import { DebouncedTextInput } from "@/components/inputs/DebouncedTextInput";
 import { useWorkspace } from "../WorkspaceProvider";
 
 export const WorkspaceSettingsForm = ({ onClose }: { onClose: () => void }) => {
@@ -38,47 +28,37 @@ export const WorkspaceSettingsForm = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <Stack spacing="6" w="full">
-      <FormControl>
-        <FormLabel>{t("workspace.settings.icon.title")}</FormLabel>
-        <Flex>
-          {workspace && (
-            <EditableEmojiOrImageIcon
-              uploadFileProps={{
-                workspaceId: workspace.id,
-                fileName: "icon",
-              }}
-              icon={workspace.icon}
-              onChangeIcon={handleChangeIcon}
-              boxSize="40px"
-            />
-          )}
-        </Flex>
-      </FormControl>
+      <Field.Root>
+        <Field.Label>{t("workspace.settings.icon.title")}</Field.Label>
+        {workspace && (
+          <EditableEmojiOrImageIcon
+            uploadFileProps={{
+              workspaceId: workspace.id,
+              fileName: "icon",
+            }}
+            icon={workspace.icon}
+            onChangeIcon={handleChangeIcon}
+            size="lg"
+            defaultIcon={HardDriveIcon}
+          />
+        )}
+      </Field.Root>
       {workspace && (
         <>
-          <TextInput
-            label={t("workspace.settings.name.label")}
-            withVariableButton={false}
-            defaultValue={workspace?.name}
-            onChange={handleNameChange}
-          />
-          <FormControl>
-            <FormLabel>ID:</FormLabel>
-            <InputGroup>
-              <Input
-                type={"text"}
-                defaultValue={workspace.id}
-                pr="16"
-                readOnly
-              />
-              <InputRightElement width="72px">
-                <CopyButton textToCopy={workspace.id} size="xs" />
-              </InputRightElement>
-            </InputGroup>
-            <FormHelperText>
+          <Field.Root>
+            <Field.Label>{t("workspace.settings.name.label")}</Field.Label>
+            <DebouncedTextInput
+              defaultValue={workspace?.name}
+              onValueChange={handleNameChange}
+            />
+          </Field.Root>
+          <Field.Root>
+            <Field.Label>ID:</Field.Label>
+            <CopyInput value={workspace.id} />
+            <Field.Description>
               {t("workspace.settings.id.helperText")}
-            </FormHelperText>
-          </FormControl>
+            </Field.Description>
+          </Field.Root>
         </>
       )}
       {workspace && workspaces && workspaces.length > 1 && (
@@ -102,22 +82,21 @@ const DeleteWorkspaceButton = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   return (
     <>
-      <Button colorScheme="red" variant="outline" onClick={onOpen}>
+      <Button variant="destructive" onClick={onOpen}>
         {t("workspace.settings.deleteButton.label")}
       </Button>
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isOpen}
         onConfirm={onConfirm}
         onClose={onClose}
-        message={
-          <Text>
-            {t("workspace.settings.deleteButton.confirmMessage", {
-              workspaceName,
-            })}
-          </Text>
-        }
         confirmButtonLabel="Delete"
-      />
+      >
+        <Text>
+          {t("workspace.settings.deleteButton.confirmMessage", {
+            workspaceName,
+          })}
+        </Text>
+      </ConfirmDialog>
     </>
   );
 };

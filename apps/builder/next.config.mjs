@@ -1,8 +1,8 @@
-import { dirname, join } from "path";
 import { withSentryConfig } from "@sentry/nextjs";
+import { dirname, join } from "path";
 import "@typebot.io/env/compiled";
-import { fileURLToPath } from "url";
 import { configureRuntimeEnv } from "next-runtime-env/build/configure.js";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -56,9 +56,12 @@ const nextConfig = {
     if (isServer) {
       // TODO: Remove once https://github.com/getsentry/sentry-javascript/issues/8105 is merged and sentry is upgraded
       config.ignoreWarnings = [
+        ...(config.ignoreWarnings ?? []),
         {
+          module:
+            /@opentelemetry\/instrumentation\/build\/esm\/platform\/node\/instrumentation\.js/,
           message:
-            /require function is used in a way in which dependencies cannot be statically extracted/,
+            /Critical dependency: the request of a dependency is an expression/,
         },
       ];
       return config;
@@ -69,9 +72,11 @@ const nextConfig = {
     config.resolve.alias["@googleapis/gmail"] = false;
     config.resolve.alias["nodemailer"] = false;
     config.resolve.alias["google-auth-library"] = false;
+    config.resolve.alias["posthog-node"] = false;
     return config;
   },
   headers: async () => {
+    const isDev = process.env.NODE_ENV !== "production";
     return [
       {
         source: "/(.*)?",
@@ -79,6 +84,27 @@ const nextConfig = {
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+              "style-src 'self' 'unsafe-inline' https:",
+              `connect-src 'self' https: wss:${
+                isDev ? " http://localhost:*" : ""
+              }`,
+              "frame-src 'self' https:",
+              `img-src 'self' data: blob: https:${isDev ? " http://localhost:*" : ""}`,
+              "font-src 'self' https: data:",
+              "media-src 'self' https:",
+              "worker-src 'self' blob:",
+              "object-src 'none'",
+            ].join("; "),
           },
         ],
       },
@@ -94,8 +120,9 @@ const nextConfig = {
   },
 };
 
-export default process.env.SENTRY_DSN
+export default process.env.SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
   ? withSentryConfig(nextConfig, {
+      telemetry: false,
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       authToken: process.env.SENTRY_AUTH_TOKEN,

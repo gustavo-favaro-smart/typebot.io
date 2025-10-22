@@ -1,5 +1,4 @@
-import { DropdownList } from "@/components/DropdownList";
-import { FormLabel, HStack, Heading, Stack } from "@chakra-ui/react";
+import { Heading, Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import {
   defaultBlur,
@@ -30,7 +29,8 @@ import type {
   Theme,
 } from "@typebot.io/theme/schemas";
 import type { TypebotV6 } from "@typebot.io/typebot/schemas/typebot";
-import React from "react";
+import { Field } from "@typebot.io/ui/components/Field";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { AvatarForm } from "./AvatarForm";
 import { ChatContainerForm } from "./ChatContainerForm";
 import { ContainerThemeForm } from "./ContainerThemeForm";
@@ -82,7 +82,7 @@ export const ChatThemeSettings = ({
   const updateGuestAvatar = (guestAvatar: AvatarProps) =>
     onChatThemeChange({ ...chatTheme, guestAvatar });
 
-  const updateButtonsInputLayout = (layout: "wrap" | "vertical") =>
+  const updateButtonsInputLayout = (layout: "wrap" | "vertical" | undefined) =>
     onChatThemeChange({ ...chatTheme, buttonsInput: { layout } });
 
   return (
@@ -200,21 +200,18 @@ export const ChatThemeSettings = ({
       </Stack>
       <Stack borderWidth={1} rounded="md" p="4" spacing={4}>
         <Heading fontSize="lg">Buttons input</Heading>
-        <HStack justify="space-between">
-          <FormLabel mb="0" mr="0">
-            Layout:
-          </FormLabel>
-          <HStack>
-            <DropdownList
-              currentItem={
-                chatTheme?.buttonsInput?.layout ?? defaultButtonsInputLayout
-              }
-              onItemSelect={updateButtonsInputLayout}
-              items={["wrap", "vertical"]}
+        <Field.Root className="flex-row">
+          <Field.Label>Layout:</Field.Label>
+          <div className="flex items-center gap-2">
+            <BasicSelect
               size="sm"
+              value={chatTheme?.buttonsInput?.layout}
+              defaultValue={defaultButtonsInputLayout}
+              onChange={updateButtonsInputLayout}
+              items={["wrap", "vertical"]}
             />
-          </HStack>
-        </HStack>
+          </div>
+        </Field.Root>
       </Stack>
     </Stack>
   );

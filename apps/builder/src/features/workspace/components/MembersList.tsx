@@ -1,8 +1,6 @@
-import { UnlockPlanAlertInfo } from "@/components/UnlockPlanAlertInfo";
-import { useUser } from "@/features/user/hooks/useUser";
 import {
-  HStack,
   Heading,
+  HStack,
   SkeletonCircle,
   SkeletonText,
   Stack,
@@ -12,14 +10,19 @@ import { getSeatsLimit } from "@typebot.io/billing/helpers/getSeatsLimit";
 import { isDefined } from "@typebot.io/lib/utils";
 import { WorkspaceRole } from "@typebot.io/prisma/enum";
 import type { Prisma } from "@typebot.io/prisma/types";
-import React from "react";
-import { useWorkspace } from "../WorkspaceProvider";
+import { Alert } from "@typebot.io/ui/components/Alert";
+import { Button } from "@typebot.io/ui/components/Button";
+import { useOpenControls } from "@typebot.io/ui/hooks/useOpenControls";
+import { InformationSquareIcon } from "@typebot.io/ui/icons/InformationSquareIcon";
+import { ChangePlanDialog } from "@/features/billing/components/ChangePlanDialog";
+import { useUser } from "@/features/user/hooks/useUser";
 import { useMembers } from "../hooks/useMembers";
 import { deleteInvitationQuery } from "../queries/deleteInvitationQuery";
 import { deleteMemberQuery } from "../queries/deleteMemberQuery";
 import { updateInvitationQuery } from "../queries/updateInvitationQuery";
 import { updateMemberQuery } from "../queries/updateMemberQuery";
 import type { Member } from "../types";
+import { useWorkspace } from "../WorkspaceProvider";
 import { AddMemberForm } from "./AddMemberForm";
 import { MemberItem } from "./MemberItem";
 
@@ -30,6 +33,12 @@ export const MembersList = () => {
   const { members, invitations, isLoading, mutate } = useMembers({
     workspaceId: workspace?.id,
   });
+
+  const {
+    isOpen: isChangePlanDialogOpen,
+    onOpen: onChangePlanDialogOpen,
+    onClose: onChangePlanDialogClose,
+  } = useOpenControls();
 
   const handleDeleteMemberClick = (memberId: string) => async () => {
     if (!workspace) return;
@@ -103,9 +112,26 @@ export const MembersList = () => {
   return (
     <Stack w="full" spacing={3}>
       {!canInviteNewMember && (
-        <UnlockPlanAlertInfo>
-          {t("workspace.membersList.unlockBanner.label")}
-        </UnlockPlanAlertInfo>
+        <Alert.Root>
+          <InformationSquareIcon />
+          <Alert.Title>Unlock more members</Alert.Title>
+          <Alert.Description>
+            {t("workspace.membersList.unlockBanner.label")}
+          </Alert.Description>
+          <Alert.Action>
+            <Button
+              variant="secondary"
+              onClick={onChangePlanDialogOpen}
+              size="sm"
+            >
+              Upgrade
+            </Button>
+            <ChangePlanDialog
+              isOpen={isChangePlanDialogOpen}
+              onClose={onChangePlanDialogClose}
+            />
+          </Alert.Action>
+        </Alert.Root>
       )}
       {isDefined(seatsLimit) && (
         <Heading fontSize="2xl">

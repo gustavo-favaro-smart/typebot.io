@@ -21,8 +21,7 @@ import { timeInputSchema } from "@typebot.io/blocks-inputs/time/schema";
 import { urlInputSchema } from "@typebot.io/blocks-inputs/url/schema";
 import { logInSessionSchema } from "@typebot.io/logs/schemas";
 import { settingsSchema } from "@typebot.io/settings/schemas";
-import { themeSchema } from "@typebot.io/theme/schemas";
-import { dynamicThemeSchema } from "@typebot.io/theme/schemas";
+import { dynamicThemeSchema, themeSchema } from "@typebot.io/theme/schemas";
 import { preprocessTypebot } from "@typebot.io/typebot/preprocessTypebot";
 import {
   typebotV5Schema,
@@ -35,6 +34,7 @@ const textMessageSchema = z
   .object({
     type: z.literal("text"),
     text: z.string(),
+    metadata: z.object({ replyId: z.string().optional() }).optional(),
     attachedFileUrls: z
       .array(z.string())
       .optional()
@@ -205,10 +205,19 @@ const startTypebotV6Schema = typebotV6Schema.pick(startTypebotPick).openapi({
 });
 export type StartTypebotV6 = z.infer<typeof startTypebotV6Schema>;
 
-export const startTypebotSchema = z.preprocess(
-  preprocessTypebot,
-  z.discriminatedUnion("version", [startTypebotV6Schema, startTypebotV5Schema]),
-);
+export const startTypebotSchema = z
+  .preprocess(
+    preprocessTypebot,
+    z.discriminatedUnion("version", [
+      startTypebotV6Schema,
+      startTypebotV5Schema,
+    ]),
+  )
+  .and(
+    z.object({
+      publicTypebotId: z.string().optional(),
+    }),
+  );
 export type StartTypebot = StartTypebotV6 | StartTypebotV5;
 
 export const startFromSchema = z.discriminatedUnion("type", [
@@ -256,7 +265,6 @@ const commonStartChatInputSchema = z.object({
       },
     }),
   textBubbleContentFormat: z.enum(["richText", "markdown"]).default("richText"),
-  startFrom: startFromSchema.optional(),
 });
 export const startChatInputSchema = z
   .object({
@@ -291,6 +299,7 @@ export const startPreviewChatInputSchema = z
       .describe(
         "If provided, will be used as the session ID and will overwrite any existing session with the same ID.",
       ),
+    startFrom: startFromSchema.optional(),
   })
   .merge(commonStartChatInputSchema);
 export type StartPreviewChatInput = z.infer<typeof startPreviewChatInputSchema>;

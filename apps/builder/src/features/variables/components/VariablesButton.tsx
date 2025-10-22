@@ -1,65 +1,59 @@
-import { BracesIcon } from "@/components/icons";
-import { VariableSearchInput } from "@/components/inputs/VariableSearchInput";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import {
-  Flex,
-  IconButton,
-  type IconButtonProps,
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-  Portal,
-  Tooltip,
-  useDisclosure,
-} from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
+import type { ButtonProps } from "@typebot.io/ui/components/Button";
+import { Popover } from "@typebot.io/ui/components/Popover";
+import { Tooltip } from "@typebot.io/ui/components/Tooltip";
+import { useOpenControls } from "@typebot.io/ui/hooks/useOpenControls";
+import { ThirdBracketIcon } from "@typebot.io/ui/icons/ThirdBracketIcon";
+import { cn } from "@typebot.io/ui/lib/cn";
 import type { Variable } from "@typebot.io/variables/schemas";
-import React, { useRef } from "react";
+import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
 
 type Props = {
   onSelectVariable: (variable: Pick<Variable, "name" | "id">) => void;
-} & Omit<IconButtonProps, "aria-label">;
+  offset?: number;
+} & ButtonProps;
 
-export const VariablesButton = ({ onSelectVariable, ...props }: Props) => {
+export const VariablesButton = ({
+  onSelectVariable,
+  className,
+  offset,
+  variant = "secondary",
+  ...props
+}: Props) => {
   const { t } = useTranslate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  useOutsideClick({
-    ref: popoverRef,
-    handler: onClose,
-    isEnabled: isOpen,
-  });
+  const controls = useOpenControls();
 
   return (
-    <Popover isLazy isOpen={isOpen}>
-      <PopoverAnchor>
-        <Flex>
-          <Tooltip label={t("variables.button.tooltip")}>
-            <IconButton
+    <Popover.Root {...controls}>
+      <Popover.Trigger
+        render={(popoverProps) => (
+          <Tooltip.Root>
+            <Tooltip.TriggerButton
+              {...popoverProps}
               aria-label={t("variables.button.tooltip")}
-              icon={<BracesIcon />}
-              pos="relative"
-              onClick={onOpen}
+              variant={variant}
+              size="icon"
+              className={cn("size-10", className)}
               {...props}
-            />
-          </Tooltip>
-        </Flex>
-      </PopoverAnchor>
-      <Portal>
-        <PopoverContent w="full" ref={popoverRef}>
-          <VariableSearchInput
-            initialVariableId={undefined}
-            onSelectVariable={(variable) => {
-              onClose();
-              if (variable) onSelectVariable(variable);
-            }}
-            placeholder={t("variables.button.searchInput.placeholder")}
-            shadow="md"
-            autoFocus
-          />
-        </PopoverContent>
-      </Portal>
-    </Popover>
+            >
+              <ThirdBracketIcon />
+            </Tooltip.TriggerButton>
+            <Tooltip.Popup>{t("variables.button.tooltip")}</Tooltip.Popup>
+          </Tooltip.Root>
+        )}
+      />
+      <Popover.Popup className="p-0 data-[open]:duration-0">
+        <VariablesCombobox
+          initialVariableId={undefined}
+          onSelectVariable={(variable) => {
+            if (variable) {
+              onSelectVariable(variable);
+              controls.onClose();
+            }
+          }}
+          defaultOpen
+        />
+      </Popover.Popup>
+    </Popover.Root>
   );
 };

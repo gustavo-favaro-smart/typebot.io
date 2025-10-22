@@ -1,33 +1,22 @@
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
-import { TextInput, Textarea } from "@/components/inputs";
-import { CodeEditor } from "@/components/inputs/CodeEditor";
-import { SwitchWithLabel } from "@/components/inputs/SwitchWithLabel";
-import { VariableSearchInput } from "@/components/inputs/VariableSearchInput";
-import { isFreePlan } from "@/features/billing/helpers/isFreePlan";
-import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
-import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Flex,
-  FormLabel,
-  HStack,
-  Stack,
-  Switch,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Flex, HStack, Stack, Text, useDisclosure } from "@chakra-ui/react";
 import { defaultSendEmailOptions } from "@typebot.io/blocks-integrations/sendEmail/constants";
 import type { SendEmailBlock } from "@typebot.io/blocks-integrations/sendEmail/schema";
 import { env } from "@typebot.io/env";
 import { isNotEmpty } from "@typebot.io/lib/utils";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Field } from "@typebot.io/ui/components/Field";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Switch } from "@typebot.io/ui/components/Switch";
 import type { Variable } from "@typebot.io/variables/schemas";
 import type { Workspace } from "@typebot.io/workspaces/schemas";
-import React from "react";
-import { SmtpConfigModal } from "./SmtpConfigModal";
+import { CodeEditor } from "@/components/inputs/CodeEditor";
+import { DebouncedTextareaWithVariablesButton } from "@/components/inputs/DebouncedTextarea";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
+import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import { isFreePlan } from "@/features/billing/helpers/isFreePlan";
+import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { SmtpCredentialsCreateDialog } from "./SmtpCredentialsCreateDialog";
 
 type Props = {
   options: SendEmailBlock["options"];
@@ -139,56 +128,68 @@ export const SendEmailSettings = ({ options, onOptionsChange }: Props) => {
           />
         )}
       </Stack>
-      <TextInput
-        label="To:"
-        onChange={handleToChange}
-        defaultValue={options?.recipients?.join(", ")}
-        placeholder="email1@gmail.com, email2@gmail.com"
-      />
-      <Accordion allowToggle>
-        <AccordionItem>
-          <AccordionButton>
-            <HStack justifyContent="space-between" w="full">
-              <Text>Advanced</Text>
-              <AccordionIcon />
-            </HStack>
-          </AccordionButton>
-          <AccordionPanel as={Stack}>
-            <TextInput
-              label="Reply to:"
-              onChange={handleReplyToChange}
-              defaultValue={options?.replyTo}
-              placeholder={"email@gmail.com"}
-            />
-            <TextInput
-              label="Cc:"
-              onChange={handleCcChange}
-              defaultValue={options?.cc?.join(", ") ?? ""}
-              placeholder="email1@gmail.com, email2@gmail.com"
-            />
-            <TextInput
-              label="Bcc:"
-              onChange={handleBccChange}
-              defaultValue={options?.bcc?.join(", ") ?? ""}
-              placeholder="email1@gmail.com, email2@gmail.com"
-            />
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+      <Field.Root>
+        <Field.Label>To:</Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          onValueChange={handleToChange}
+          defaultValue={options?.recipients?.join(", ")}
+          placeholder="email1@gmail.com, email2@gmail.com"
+        />
+      </Field.Root>
+      <Accordion.Root>
+        <Accordion.Item>
+          <Accordion.Trigger>Advanced</Accordion.Trigger>
+          <Accordion.Panel>
+            <Field.Root>
+              <Field.Label>Reply to:</Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                onValueChange={handleReplyToChange}
+                defaultValue={options?.replyTo}
+                placeholder={"email@gmail.com"}
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Cc:</Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                onValueChange={handleCcChange}
+                defaultValue={options?.cc?.join(", ") ?? ""}
+                placeholder="email1@gmail.com, email2@gmail.com"
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Bcc:</Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                onValueChange={handleBccChange}
+                defaultValue={options?.bcc?.join(", ") ?? ""}
+                placeholder="email1@gmail.com, email2@gmail.com"
+              />
+            </Field.Root>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion.Root>
 
-      <TextInput
-        label="Subject:"
-        onChange={handleSubjectChange}
-        defaultValue={options?.subject ?? ""}
-      />
-      <SwitchWithLabel
-        label={"Custom content"}
-        moreInfoContent="By default, the email body will be a recap of what has been collected so far. You can override it with this option."
-        initialValue={
-          options?.isCustomBody ?? defaultSendEmailOptions.isCustomBody
-        }
-        onCheckChange={handleIsCustomBodyChange}
-      />
+      <Field.Root>
+        <Field.Label>Subject:</Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          onValueChange={handleSubjectChange}
+          defaultValue={options?.subject ?? ""}
+        />
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={
+            options?.isCustomBody ?? defaultSendEmailOptions.isCustomBody
+          }
+          onCheckedChange={handleIsCustomBodyChange}
+        />
+        <Field.Label>
+          Custom content{" "}
+          <MoreInfoTooltip>
+            By default, the email body will be a recap of what has been
+            collected so far. You can override it with this option.
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
       {options?.isCustomBody && (
         <Stack>
           <Flex justifyContent="space-between">
@@ -196,11 +197,10 @@ export const SendEmailSettings = ({ options, onOptionsChange }: Props) => {
             <HStack>
               <Text fontSize="sm">Text</Text>
               <Switch
-                size="sm"
-                isChecked={
+                checked={
                   options.isBodyCode ?? defaultSendEmailOptions.isBodyCode
                 }
-                onChange={handleIsBodyCodeChange}
+                onCheckedChange={handleIsBodyCodeChange}
               />
               <Text fontSize="sm">Code</Text>
             </HStack>
@@ -213,33 +213,28 @@ export const SendEmailSettings = ({ options, onOptionsChange }: Props) => {
               withLineNumbers={true}
             />
           ) : (
-            <Textarea
-              data-testid="body-input"
-              minH="300px"
-              onChange={handleBodyChange}
+            <DebouncedTextareaWithVariablesButton
+              onValueChange={handleBodyChange}
               defaultValue={options.body ?? ""}
             />
           )}
-          <Stack pb="4">
-            <HStack>
-              <FormLabel m="0" htmlFor="variable">
-                Attach files:
-              </FormLabel>
+          <Field.Root className="pb-4">
+            <Field.Label>
+              Attach files
               <MoreInfoTooltip>
                 The selected variable should have previously collected files
                 from the File upload input block.
               </MoreInfoTooltip>
-            </HStack>
-
-            <VariableSearchInput
+            </Field.Label>
+            <VariablesCombobox
               initialVariableId={options?.attachmentsVariableId}
               onSelectVariable={handleChangeAttachmentVariable}
             />
-          </Stack>
+          </Field.Root>
         </Stack>
       )}
 
-      <SmtpConfigModal
+      <SmtpCredentialsCreateDialog
         isOpen={isOpen}
         onClose={onClose}
         onNewCredentials={updateCredentialsId}

@@ -1,29 +1,20 @@
-import { DropdownList } from "@/components/DropdownList";
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
-import { SwitchWithRelatedSettings } from "@/components/SwitchWithRelatedSettings";
-import { TagsInput } from "@/components/TagsInput";
-import { TextInput } from "@/components/inputs";
-import { CodeEditor } from "@/components/inputs/CodeEditor";
-import { SwitchWithLabel } from "@/components/inputs/SwitchWithLabel";
-import { VariableSearchInput } from "@/components/inputs/VariableSearchInput";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  FormControl,
-  FormLabel,
-  Stack,
-} from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import {
   defaultFileInputOptions,
   fileVisibilityOptions,
 } from "@typebot.io/blocks-inputs/file/constants";
 import type { FileInputBlock } from "@typebot.io/blocks-inputs/file/schema";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { Field } from "@typebot.io/ui/components/Field";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Switch } from "@typebot.io/ui/components/Switch";
 import type { Variable } from "@typebot.io/variables/schemas";
-import React from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { CodeEditor } from "@/components/inputs/CodeEditor";
+import { DebouncedTextInput } from "@/components/inputs/DebouncedTextInput";
+import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import { TagsInput } from "@/components/TagsInput";
 
 type Props = {
   options: FileInputBlock["options"];
@@ -73,7 +64,7 @@ export const FileInputSettings = ({ options, onOptionsChange }: Props) => {
     onOptionsChange({ ...options, labels: { ...options?.labels, skip } });
 
   const updateVisibility = (
-    visibility: (typeof fileVisibilityOptions)[number],
+    visibility: (typeof fileVisibilityOptions)[number] | undefined,
   ) => onOptionsChange({ ...options, visibility });
 
   const updateSingleFileSuccessLabel = (single: string) =>
@@ -96,65 +87,87 @@ export const FileInputSettings = ({ options, onOptionsChange }: Props) => {
 
   return (
     <Stack spacing={4}>
-      <SwitchWithLabel
-        label={t("blocks.inputs.file.settings.required.label")}
-        initialValue={options?.isRequired ?? defaultFileInputOptions.isRequired}
-        onCheckChange={handleRequiredChange}
-      />
-      <SwitchWithRelatedSettings
-        label={t("blocks.inputs.file.settings.allowedFileTypes.label")}
-        initialValue={options?.allowedFileTypes?.isEnabled}
-        onCheckChange={updateAllowedFileTypesIsEnabled}
-      >
-        <TagsInput
-          items={options?.allowedFileTypes?.types}
-          onChange={updateAllowedFileTypes}
-          placeholder={t(
-            "blocks.inputs.file.settings.allowedFileTypes.placeholder",
-          )}
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={options?.isRequired ?? defaultFileInputOptions.isRequired}
+          onCheckedChange={handleRequiredChange}
         />
-      </SwitchWithRelatedSettings>
-      <SwitchWithLabel
-        label={t("blocks.inputs.file.settings.allowMultiple.label")}
-        initialValue={
-          options?.isMultipleAllowed ??
-          defaultFileInputOptions.isMultipleAllowed
-        }
-        onCheckChange={handleMultipleFilesChange}
-      />
-
-      <Stack>
-        <FormLabel mb="0" htmlFor="variable">
+        <Field.Label>
+          {t("blocks.inputs.file.settings.required.label")}
+        </Field.Label>
+      </Field.Root>
+      <Field.Container>
+        <Field.Root className="flex-row items-center">
+          <Switch
+            checked={options?.allowedFileTypes?.isEnabled}
+            onCheckedChange={updateAllowedFileTypesIsEnabled}
+          />
+          <Field.Label className="font-medium">
+            {t("blocks.inputs.file.settings.allowedFileTypes.label")}
+          </Field.Label>
+        </Field.Root>
+        {options?.allowedFileTypes?.isEnabled && (
+          <TagsInput
+            items={options?.allowedFileTypes?.types}
+            onValueChange={updateAllowedFileTypes}
+            placeholder={t(
+              "blocks.inputs.file.settings.allowedFileTypes.placeholder",
+            )}
+          />
+        )}
+      </Field.Container>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={
+            options?.isMultipleAllowed ??
+            defaultFileInputOptions.isMultipleAllowed
+          }
+          onCheckedChange={handleMultipleFilesChange}
+        />
+        <Field.Label>
+          {t("blocks.inputs.file.settings.allowMultiple.label")}
+        </Field.Label>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
           {options?.isMultipleAllowed
             ? t("blocks.inputs.file.settings.saveMultipleUpload.label")
             : t("blocks.inputs.file.settings.saveSingleUpload.label")}
-        </FormLabel>
-        <VariableSearchInput
+        </Field.Label>
+        <VariablesCombobox
           initialVariableId={options?.variableId}
           onSelectVariable={handleVariableChange}
         />
-      </Stack>
+      </Field.Root>
 
-      <DropdownList
-        label="Visibility:"
-        direction="row"
-        moreInfoTooltip='This setting determines who can see the uploaded files. "Public" means that anyone who has the link can see the files. "Private" means that only a member of this workspace can see the files. Check the docs for more information.'
-        currentItem={options?.visibility ?? defaultFileInputOptions.visibility}
-        onItemSelect={updateVisibility}
-        items={fileVisibilityOptions}
-      />
+      <Field.Root>
+        <Field.Label>
+          Visibility:
+          <MoreInfoTooltip>
+            This setting determines who can see the uploaded files. "Public"
+            means that anyone who has the link can see the files. "Private"
+            means that only a member of this workspace can see the files. Check
+            the docs for more information.
+          </MoreInfoTooltip>
+        </Field.Label>
+        <BasicSelect
+          value={options?.visibility}
+          defaultValue={defaultFileInputOptions.visibility}
+          onChange={updateVisibility}
+          items={fileVisibilityOptions}
+        />
+      </Field.Root>
 
-      <Accordion allowToggle>
-        <AccordionItem>
-          <AccordionButton justifyContent="space-between">
+      <Accordion.Root>
+        <Accordion.Item>
+          <Accordion.Trigger>
             {t("blocks.inputs.file.settings.labels")}
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel as={Stack} spacing={4}>
-            <Stack>
-              <FormLabel mb="0">
+          </Accordion.Trigger>
+          <Accordion.Panel>
+            <Field.Root>
+              <Field.Label>
                 {t("blocks.inputs.settings.placeholder.label")}
-              </FormLabel>
+              </Field.Label>
               <CodeEditor
                 lang="html"
                 onChange={handlePlaceholderLabelChange}
@@ -162,62 +175,79 @@ export const FileInputSettings = ({ options, onOptionsChange }: Props) => {
                   options?.labels?.placeholder ??
                   defaultFileInputOptions.labels.placeholder
                 }
-                height={"100px"}
                 withVariableButton={false}
               />
-            </Stack>
-            <TextInput
-              label={t("blocks.inputs.settings.button.label")}
-              defaultValue={
-                options?.labels?.button ?? defaultFileInputOptions.labels.button
-              }
-              onChange={handleButtonLabelChange}
-              withVariableButton={false}
-            />
-            {options?.isMultipleAllowed && (
-              <TextInput
-                label={t("blocks.inputs.file.settings.clear.label")}
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                {t("blocks.inputs.settings.button.label")}
+              </Field.Label>
+              <DebouncedTextInput
                 defaultValue={
-                  options?.labels?.clear ?? defaultFileInputOptions.labels.clear
+                  options?.labels?.button ??
+                  defaultFileInputOptions.labels.button
                 }
-                onChange={updateClearButtonLabel}
-                withVariableButton={false}
+                onValueChange={handleButtonLabelChange}
               />
+            </Field.Root>
+            {options?.isMultipleAllowed && (
+              <Field.Root>
+                <Field.Label>
+                  {t("blocks.inputs.file.settings.clear.label")}
+                </Field.Label>
+                <DebouncedTextInput
+                  defaultValue={
+                    options?.labels?.clear ??
+                    defaultFileInputOptions.labels.clear
+                  }
+                  onValueChange={updateClearButtonLabel}
+                />
+              </Field.Root>
             )}
             {!(options?.isRequired ?? defaultFileInputOptions.isRequired) && (
-              <TextInput
-                label={t("blocks.inputs.file.settings.skip.label")}
-                defaultValue={
-                  options?.labels?.skip ?? defaultFileInputOptions.labels.skip
-                }
-                onChange={updateSkipButtonLabel}
-                withVariableButton={false}
-              />
+              <Field.Root>
+                <Field.Label>
+                  {t("blocks.inputs.file.settings.skip.label")}
+                </Field.Label>
+                <DebouncedTextInput
+                  defaultValue={
+                    options?.labels?.skip ?? defaultFileInputOptions.labels.skip
+                  }
+                  onValueChange={updateSkipButtonLabel}
+                />
+              </Field.Root>
             )}
-            <TextInput
-              label="Single file success"
-              defaultValue={
-                options?.labels?.success?.single ??
-                defaultFileInputOptions.labels.success.single
-              }
-              onChange={updateSingleFileSuccessLabel}
-              withVariableButton={false}
-            />
+            <Field.Root>
+              <Field.Label>Single file success</Field.Label>
+              <DebouncedTextInput
+                defaultValue={
+                  options?.labels?.success?.single ??
+                  defaultFileInputOptions.labels.success.single
+                }
+                onValueChange={updateSingleFileSuccessLabel}
+              />
+            </Field.Root>
             {options?.isMultipleAllowed && (
-              <TextInput
-                label="Multi files success"
-                moreInfoTooltip="Include {total} to show the total number of files uploaded"
-                defaultValue={
-                  options?.labels?.success?.multiple ??
-                  defaultFileInputOptions.labels.success.multiple
-                }
-                onChange={updateMultipleFilesSuccessLabel}
-                withVariableButton={false}
-              />
+              <Field.Root>
+                <Field.Label>
+                  Multi files success
+                  <MoreInfoTooltip>
+                    Include {"{total}"} to show the total number of files
+                    uploaded
+                  </MoreInfoTooltip>
+                </Field.Label>
+                <DebouncedTextInput
+                  defaultValue={
+                    options?.labels?.success?.multiple ??
+                    defaultFileInputOptions.labels.success.multiple
+                  }
+                  onValueChange={updateMultipleFilesSuccessLabel}
+                />
+              </Field.Root>
             )}
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion.Root>
     </Stack>
   );
 };

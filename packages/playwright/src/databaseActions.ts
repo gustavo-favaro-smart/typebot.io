@@ -1,16 +1,14 @@
-import { readFileSync } from "fs";
 import { createId } from "@typebot.io/lib/createId";
 import prisma from "@typebot.io/prisma";
-import { DbNull, Plan, WorkspaceRole } from "@typebot.io/prisma/enum";
+import { DbNull } from "@typebot.io/prisma/enum";
 import type { Prisma } from "@typebot.io/prisma/types";
 import type { Typebot, TypebotV6 } from "@typebot.io/typebot/schemas/typebot";
-import type { User } from "@typebot.io/user/schemas";
-import type { Workspace } from "@typebot.io/workspaces/schemas";
+import { readFileSync } from "fs";
 import {
   parseTestTypebot,
   parseTypebotToPublicTypebot,
 } from "./databaseHelpers";
-import { proWorkspaceId, userId } from "./databaseSetup";
+import { proWorkspaceId } from "./databaseSetup";
 
 type CreateFakeResultsProps = {
   typebotId: string;
@@ -113,43 +111,6 @@ export const deleteWebhooks = async (webhookIds: string[]) => {
   });
 };
 
-export const createWorkspaces = async (workspaces: Partial<Workspace>[]) => {
-  const workspaceIds = workspaces.map(
-    (workspace) => workspace.id ?? createId(),
-  );
-  await prisma.workspace.createMany({
-    data: workspaces.map((workspace, index) => ({
-      id: workspaceIds[index],
-      name: "Free workspace",
-      plan: Plan.FREE,
-      ...workspace,
-      settings: workspace.settings ?? DbNull,
-    })),
-  });
-  await prisma.memberInWorkspace.createMany({
-    data: workspaces.map((_, index) => ({
-      userId,
-      workspaceId: workspaceIds[index]!,
-      role: WorkspaceRole.ADMIN,
-    })),
-  });
-  return workspaceIds;
-};
-
-export const updateUser = (data: Partial<User>) =>
-  prisma.user.update({
-    data: {
-      ...data,
-      onboardingCategories: data.onboardingCategories,
-      displayedInAppNotifications:
-        data.displayedInAppNotifications ?? undefined,
-      groupTitlesAutoGeneration: data.groupTitlesAutoGeneration ?? undefined,
-    },
-    where: {
-      id: userId,
-    },
-  });
-
 export const createTypebots = async (partialTypebots: Partial<TypebotV6>[]) => {
   const typebotsWithId = partialTypebots.map((typebot) => {
     const typebotId = typebot.id ?? createId();
@@ -186,7 +147,7 @@ export const updateTypebot = async (
 };
 
 export const updateWorkspace = async (
-  id: string,
+  _id: string,
   data: Prisma.Prisma.WorkspaceUncheckedUpdateManyInput,
 ) => {
   await prisma.workspace.updateMany({

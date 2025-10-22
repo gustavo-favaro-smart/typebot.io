@@ -1,3 +1,5 @@
+import { Flex, useColorModeValue } from "@chakra-ui/react";
+import { LoaderCircleIcon } from "@typebot.io/ui/icons/LoaderCircleIcon";
 import { Seo } from "@/components/Seo";
 import { Graph } from "@/features/graph/components/Graph";
 import { GraphDndProvider } from "@/features/graph/providers/GraphDndProvider";
@@ -7,11 +9,9 @@ import { PreviewDrawer } from "@/features/preview/components/PreviewDrawer";
 import { VariablesDrawer } from "@/features/preview/components/VariablesDrawer";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { useRightPanel } from "@/hooks/useRightPanel";
-import { Flex, Spinner, useColorModeValue } from "@chakra-ui/react";
 import { EditorProvider } from "../providers/EditorProvider";
 import { useTypebot } from "../providers/TypebotProvider";
 import { BlocksSideBar } from "./BlocksSideBar";
-import { BoardMenuButton } from "./BoardMenuButton";
 import { SuspectedTypebotBanner } from "./SuspectedTypebotBanner";
 import { TypebotHeader } from "./TypebotHeader";
 
@@ -51,18 +51,14 @@ export const EditorPage = () => {
                 }
               >
                 <Graph flex="1" typebot={typebot} key={typebot.id} />
-                <BoardMenuButton
-                  pos="absolute"
-                  right="40px"
-                  top={`calc(20px + ${isSuspicious ? "70px" : "0px"})`}
-                />
+
                 <RightPanel />
               </GraphProvider>
               {currentUserMode === "write" && <BlocksSideBar />}
             </GraphDndProvider>
           ) : (
             <Flex justify="center" align="center" boxSize="full">
-              <Spinner color="gray" />
+              <LoaderCircleIcon className="animate-spin" />
             </Flex>
           )}
         </Flex>

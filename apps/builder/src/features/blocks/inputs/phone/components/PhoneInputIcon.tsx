@@ -1,7 +1,5 @@
-import { PhoneIcon } from "@/components/icons";
-import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { TelephoneIcon } from "@typebot.io/ui/icons/TelephoneIcon";
 
-export const PhoneInputIcon = (props: IconProps) => (
-  <PhoneIcon color="orange.500" {...props} />
+export const PhoneInputIcon = ({ className }: { className?: string }) => (
+  <TelephoneIcon className={className} />
 );

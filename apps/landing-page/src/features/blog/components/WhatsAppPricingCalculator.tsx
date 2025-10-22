@@ -1,35 +1,38 @@
-import { Card } from "@/components/Card";
-import { NumberInput } from "@/components/NumberInput";
-import { createListCollection } from "@ark-ui/react";
 import { isNotDefined } from "@typebot.io/lib/utils";
-import { Select, SelectItem } from "@typebot.io/ui/components/Select";
-import { useMemo, useState } from "react";
+import { Field } from "@typebot.io/ui/components/Field";
+import { NumberField } from "@typebot.io/ui/components/NumberField";
+import { Select } from "@typebot.io/ui/components/Select";
+import { useId, useMemo, useState } from "react";
+import { Card } from "@/components/Card";
 import { whatsAppPricingData } from "../data/whatsAppPricingData";
 
-const countries = createListCollection({
-  items: whatsAppPricingData.markets.map((market) => market.market),
-});
-const messageTypes = createListCollection({
-  items: [
-    { label: "Marketing", value: "marketing" },
-    { label: "Utility", value: "utility" },
-    { label: "Authentication", value: "authentication" },
-    {
-      label: "Authentication International",
-      value: "authenticationInternational",
-    },
-    { label: "Service", value: "service" },
-  ],
-});
+const countries = [
+  { label: "Select a country", value: null },
+  ...whatsAppPricingData.markets.map((market) => ({
+    label: market.market,
+    value: market.market,
+  })),
+];
+
+const messageTypes = [
+  { label: "Select a type", value: null },
+  { label: "Marketing", value: "marketing" },
+  { label: "Utility", value: "utility" },
+  { label: "Authentication", value: "authentication" },
+  {
+    label: "Authentication International",
+    value: "authenticationInternational",
+  },
+  { label: "Service", value: "service" },
+];
 
 export const WhatsAppPricingCalculator = () => {
-  const [selectedCountry, setSelectedCountry] = useState<
-    (typeof whatsAppPricingData.markets)[number]["market"] | undefined
-  >();
-  const [selectedMessageType, setSelectedMessageType] = useState<
-    (typeof messageTypes.items)[number]["value"] | undefined
-  >();
-  const [totalMessages, setTotalMessages] = useState<number | undefined>();
+  const [selectedCountry, setSelectedCountry] =
+    useState<(typeof countries)[number]["value"]>(null);
+  const [selectedMessageType, setSelectedMessageType] =
+    useState<(typeof messageTypes)[number]["value"]>(null);
+  const [totalMessages, setTotalMessages] = useState<number | undefined>(0);
+  const numberFieldId = useId();
 
   const priceResult = useMemo(() => {
     if (!selectedCountry || !selectedMessageType || isNotDefined(totalMessages))
@@ -55,44 +58,55 @@ export const WhatsAppPricingCalculator = () => {
 
   return (
     <Card className="not-prose">
-      <Select
-        collection={countries}
-        onValueChange={(e) => {
-          setSelectedCountry(e.items[0]);
-        }}
-        label="Country"
-        placeholder="Select a country"
-      >
-        {countries.items.map((country) => (
-          <SelectItem key={country} item={country}>
-            {country}
-          </SelectItem>
-        ))}
-      </Select>
-      <Select
-        collection={messageTypes}
-        label="Message type"
-        placeholder="Select a type"
-        onValueChange={(e) => {
-          setSelectedMessageType(e.items[0].value);
-        }}
-      >
-        {messageTypes.items.map((type) => (
-          <SelectItem key={type.value} item={type}>
-            {type.label}
-          </SelectItem>
-        ))}
-      </Select>
-      <NumberInput
-        label="Total messages"
+      <Field.Root>
+        <Field.Label>Country</Field.Label>
+        <Select.Root
+          items={countries}
+          value={selectedCountry}
+          onValueChange={setSelectedCountry}
+        >
+          <Select.Trigger />
+          <Select.Popup>
+            {countries.map((country) => (
+              <Select.Item key={country.value} value={country.value}>
+                {country.label}
+              </Select.Item>
+            ))}
+          </Select.Popup>
+        </Select.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Message type</Field.Label>
+        <Select.Root
+          items={messageTypes}
+          onValueChange={setSelectedMessageType}
+          value={selectedMessageType}
+        >
+          <Select.Trigger />
+          <Select.Popup>
+            {messageTypes.map((type) => (
+              <Select.Item key={type.value} value={type.value}>
+                {type.label}
+              </Select.Item>
+            ))}
+          </Select.Popup>
+        </Select.Root>
+      </Field.Root>
+
+      <NumberField.Root
+        id={numberFieldId}
         min={0}
         max={50000}
         step={100}
-        placeholder="0"
-        onValueChange={(e) => {
-          setTotalMessages(e.valueAsNumber);
-        }}
-      />
+        onValueChange={(value) => setTotalMessages(value ?? undefined)}
+      >
+        <label htmlFor={numberFieldId}>Total messages</label>
+        <NumberField.Group>
+          <NumberField.Decrement variant="secondary" />
+          <NumberField.Input placeholder="0" />
+          <NumberField.Increment variant="secondary" />
+        </NumberField.Group>
+      </NumberField.Root>
       {priceResult && (
         <p className="font-medium">
           Estimated Price: <span className="text-orange-10">{priceResult}</span>

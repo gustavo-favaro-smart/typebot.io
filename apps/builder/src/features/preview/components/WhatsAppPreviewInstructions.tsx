@@ -1,15 +1,5 @@
-import { BuoyIcon, ExternalLinkIcon } from "@/components/icons";
-import { TextInput } from "@/components/inputs";
-import { useEditor } from "@/features/editor/providers/EditorProvider";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import { trpc } from "@/lib/queryClient";
-import { toast } from "@/lib/toast";
 import {
-  Alert,
-  AlertIcon,
-  Button,
   HStack,
-  Link,
   SlideFade,
   Stack,
   type StackProps,
@@ -17,7 +7,18 @@ import {
 } from "@chakra-ui/react";
 import { useMutation } from "@tanstack/react-query";
 import { isEmpty } from "@typebot.io/lib/utils";
+import { Alert } from "@typebot.io/ui/components/Alert";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Field } from "@typebot.io/ui/components/Field";
+import { Input } from "@typebot.io/ui/components/Input";
+import { ArrowUpRight01Icon } from "@typebot.io/ui/icons/ArrowUpRight01Icon";
+import { Book02Icon } from "@typebot.io/ui/icons/Book02Icon";
+import { CheckmarkSquare02Icon } from "@typebot.io/ui/icons/CheckmarkSquare02Icon";
 import { type FormEvent, useState } from "react";
+import { ButtonLink } from "@/components/ButtonLink";
+import { useEditor } from "@/features/editor/providers/EditorProvider";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { trpc } from "@/lib/queryClient";
 import {
   getPhoneNumberFromLocalStorage,
   setPhoneNumberInLocalStorage,
@@ -37,10 +38,6 @@ export const WhatsAppPreviewInstructions = (props: StackProps) => {
     trpc.whatsApp.startWhatsAppPreview.mutationOptions({
       onMutate: () => setIsSendingMessage(true),
       onSettled: () => setIsSendingMessage(false),
-      onError: (error) => {
-        if (error.data?.logError) return toast(error.data.logError);
-        toast({ description: error.message });
-      },
       onSuccess: async (data) => {
         if (
           data?.message === "success" &&
@@ -82,56 +79,45 @@ export const WhatsAppPreviewInstructions = (props: StackProps) => {
     >
       <HStack justifyContent="flex-end">
         <Text fontSize="sm">Need help?</Text>
-        <Button
-          as={Link}
+        <ButtonLink
           href="https://docs.typebot.io/deploy/whatsapp/overview"
-          leftIcon={<BuoyIcon />}
           size="sm"
+          variant="secondary"
         >
+          <Book02Icon />
           Check the docs
-        </Button>
+        </ButtonLink>
       </HStack>
-      <TextInput
-        label="Your phone number"
-        placeholder="+XXXXXXXXXXXX"
-        type="tel"
-        withVariableButton={false}
-        debounceTimeout={0}
-        defaultValue={phoneNumber}
-        onChange={setPhoneNumber}
-      />
+      <Field.Root>
+        <Field.Label>Your phone number</Field.Label>
+        <Input
+          placeholder="+XXXXXXXXXXXX"
+          type="tel"
+          defaultValue={phoneNumber}
+          onValueChange={setPhoneNumber}
+        />
+      </Field.Root>
       {!isMessageSent && (
         <Button
-          isDisabled={isEmpty(phoneNumber) || isMessageSent}
-          isLoading={isSendingMessage}
+          disabled={isEmpty(phoneNumber) || isMessageSent || isSendingMessage}
           type="submit"
-          colorScheme="orange"
         >
           {hasMessageBeenSent ? "Restart" : "Start"} the chat
         </Button>
       )}
       <SlideFade offsetY="20px" in={isMessageSent} unmountOnExit>
         <Stack>
-          <Button
-            as={Link}
-            href={`https://web.whatsapp.com/`}
-            isExternal
-            colorScheme="orange"
-            rightIcon={<ExternalLinkIcon />}
-          >
+          <ButtonLink href={`https://web.whatsapp.com/`} target="_blank">
             Open WhatsApp Web
-          </Button>
-          <Alert status="success" w="100%">
-            <HStack>
-              <AlertIcon />
-              <Stack spacing={1}>
-                <Text fontWeight="medium">Chat started!</Text>
-                <Text fontSize="sm">
-                  The first message can take up to 2 min to be delivered.
-                </Text>
-              </Stack>
-            </HStack>
-          </Alert>
+            <ArrowUpRight01Icon />
+          </ButtonLink>
+          <Alert.Root variant="success">
+            <CheckmarkSquare02Icon />
+            <Alert.Title>Chat started!</Alert.Title>
+            <Alert.Description>
+              The first message can take up to 2 min to be delivered.
+            </Alert.Description>
+          </Alert.Root>
         </Stack>
       </SlideFade>
     </Stack>

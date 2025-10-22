@@ -1,23 +1,17 @@
-import { ImageUploadContent } from "@/components/ImageUploadContent";
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
-import { TextInput, Textarea } from "@/components/inputs";
-import { CodeEditor } from "@/components/inputs/CodeEditor";
-import { SwitchWithLabel } from "@/components/inputs/SwitchWithLabel";
-import {
-  FormLabel,
-  HStack,
-  Image,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import { env } from "@typebot.io/env";
 import { defaultSettings } from "@typebot.io/settings/constants";
 import type { Settings } from "@typebot.io/settings/schemas";
-import React from "react";
+import { Field } from "@typebot.io/ui/components/Field";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { Popover } from "@typebot.io/ui/components/Popover";
+import { Switch } from "@typebot.io/ui/components/Switch";
+import { useOpenControls } from "@typebot.io/ui/hooks/useOpenControls";
+import { ImageUploadContent } from "@/components/ImageUploadContent";
+import { CodeEditor } from "@/components/inputs/CodeEditor";
+import { DebouncedTextareaWithVariablesButton } from "@/components/inputs/DebouncedTextarea";
+import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 
 type Props = {
   workspaceId: string;
@@ -35,6 +29,8 @@ export const MetadataForm = ({
   onMetadataChange,
 }: Props) => {
   const { t } = useTranslate();
+  const favIconPopoverControls = useOpenControls();
+  const imagePopoverControls = useOpenControls();
   const handleTitleChange = (title: string) =>
     onMetadataChange({ ...metadata, title });
   const handleDescriptionChange = (description: string) =>
@@ -60,23 +56,20 @@ export const MetadataForm = ({
 
   return (
     <Stack spacing="6">
-      <Stack>
-        <FormLabel mb="0" htmlFor="icon">
-          {t("settings.sideMenu.metadata.icon.label")}
-        </FormLabel>
-        <Popover isLazy placement="top">
-          <PopoverTrigger>
-            <Image
-              src={favIconUrl}
-              w="20px"
-              alt="Fav icon"
-              cursor="pointer"
-              _hover={{ filter: "brightness(.9)" }}
-              transition="filter 200ms"
-              rounded="md"
-            />
-          </PopoverTrigger>
-          <PopoverContent p="4" w="400px">
+      <Field.Root>
+        <Field.Label>{t("settings.sideMenu.metadata.icon.label")}</Field.Label>
+        <Popover.Root {...favIconPopoverControls}>
+          <Popover.Trigger
+            render={(props) => (
+              <img
+                {...props}
+                className="w-5 cursor-pointer transition-filter duration-200 rounded-md hover:brightness-90"
+                src={favIconUrl}
+                alt="Fav icon"
+              />
+            )}
+          />
+          <Popover.Popup className="w-[400px]" side="right">
             <ImageUploadContent
               uploadFileProps={{
                 workspaceId,
@@ -90,25 +83,20 @@ export const MetadataForm = ({
               }}
               imageSize="thumb"
             />
-          </PopoverContent>
-        </Popover>
-      </Stack>
-      <Stack>
-        <FormLabel mb="0" htmlFor="image">
-          {t("settings.sideMenu.metadata.image.label")}
-        </FormLabel>
-        <Popover isLazy placement="top">
-          <PopoverTrigger>
-            <Image
+          </Popover.Popup>
+        </Popover.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>{t("settings.sideMenu.metadata.image.label")}</Field.Label>
+        <Popover.Root {...imagePopoverControls}>
+          <Popover.Trigger>
+            <img
+              className="cursor-pointer transition-filter duration-200 rounded-md hover:brightness-90"
               src={imageUrl}
               alt="Website image"
-              cursor="pointer"
-              _hover={{ filter: "brightness(.9)" }}
-              transition="filter 200ms"
-              rounded="md"
             />
-          </PopoverTrigger>
-          <PopoverContent p="4" w="500px">
+          </Popover.Trigger>
+          <Popover.Popup className="w-[500px]" side="right">
             <ImageUploadContent
               uploadFileProps={{
                 workspaceId,
@@ -121,49 +109,71 @@ export const MetadataForm = ({
                 unsplash: true,
               }}
             />
-          </PopoverContent>
-        </Popover>
-      </Stack>
-      <TextInput
-        label={t("settings.sideMenu.metadata.title.label")}
-        defaultValue={metadata?.title ?? typebotName}
-        onChange={handleTitleChange}
-      />
-      <Textarea
-        defaultValue={
-          metadata?.description ?? defaultSettings.metadata.description
-        }
-        onChange={handleDescriptionChange}
-        label={t("settings.sideMenu.metadata.description.label")}
-      />
-      <TextInput
-        defaultValue={metadata?.googleTagManagerId}
-        placeholder="GTM-XXXXXX"
-        onChange={handleGoogleTagManagerIdChange}
-        label="Google Tag Manager ID:"
-        moreInfoTooltip={t("settings.sideMenu.metadata.gtm.tooltip")}
-      />
-      <Stack>
-        <HStack as={FormLabel} mb="0" htmlFor="head">
-          <Text>{t("settings.sideMenu.metadata.headCode.label")}</Text>
+          </Popover.Popup>
+        </Popover.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>{t("settings.sideMenu.metadata.title.label")}</Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          defaultValue={metadata?.title ?? typebotName}
+          onValueChange={handleTitleChange}
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          {t("settings.sideMenu.metadata.description.label")}
+        </Field.Label>
+        <Field.Control
+          render={(props) => (
+            <DebouncedTextareaWithVariablesButton
+              {...props}
+              defaultValue={
+                metadata?.description ?? defaultSettings.metadata.description
+              }
+              onValueChange={handleDescriptionChange}
+            />
+          )}
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          Google Tag Manager ID:
+          <MoreInfoTooltip>
+            {t("settings.sideMenu.metadata.gtm.tooltip")}
+          </MoreInfoTooltip>
+        </Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          defaultValue={metadata?.googleTagManagerId}
+          placeholder="GTM-XXXXXX"
+          onValueChange={handleGoogleTagManagerIdChange}
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          {t("settings.sideMenu.metadata.headCode.label")}
           <MoreInfoTooltip>
             {t("settings.sideMenu.metadata.headCode.tooltip")}
           </MoreInfoTooltip>
-        </HStack>
+        </Field.Label>
         <CodeEditor
-          id="head"
           defaultValue={metadata?.customHeadCode}
           onChange={handleHeadCodeChange}
           lang="html"
           withVariableButton={false}
         />
-      </Stack>
-      <SwitchWithLabel
-        label={t("settings.sideMenu.metadata.allowIndexing.label")}
-        initialValue={metadata?.allowIndexing}
-        onCheckChange={handleAllowIndexingChange}
-        moreInfoContent={t("settings.sideMenu.metadata.allowIndexing.tooltip")}
-      />
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={metadata?.allowIndexing}
+          onCheckedChange={handleAllowIndexingChange}
+        />
+        <Field.Label>
+          {t("settings.sideMenu.metadata.allowIndexing.label")}{" "}
+          <MoreInfoTooltip>
+            {t("settings.sideMenu.metadata.allowIndexing.tooltip")}
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
     </Stack>
   );
 };

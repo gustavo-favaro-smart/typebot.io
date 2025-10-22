@@ -1,7 +1,9 @@
-import { PlusIcon, TrashIcon } from "@/components/icons";
-import { Box, Button, Fade, Flex, IconButton, Stack } from "@chakra-ui/react";
+import { Box, Flex, Stack } from "@chakra-ui/react";
 import { createId } from "@paralleldrive/cuid2";
-import React, { useEffect, useState } from "react";
+import { Button } from "@typebot.io/ui/components/Button";
+import { PlusSignIcon } from "@typebot.io/ui/icons/PlusSignIcon";
+import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
+import { useEffect, useState } from "react";
 
 type ItemWithId<T extends number | string | boolean> = {
   id: string;
@@ -104,33 +106,22 @@ export const PrimitiveList = <T extends number | string | boolean>({
               item: item.value as T,
               onItemChange: handleCellChange(itemIndex),
             })}
-            <Fade
-              in={showDeleteIndex === itemIndex}
-              style={{
-                position: "absolute",
-                left: "-15px",
-                top: "-15px",
-                zIndex: 1,
-              }}
-              unmountOnExit
-            >
-              <IconButton
-                icon={<TrashIcon />}
-                aria-label="Remove cell"
+            {showDeleteIndex === itemIndex && (
+              <Button
+                variant="secondary"
+                className="size-6 animate-in fade-in-0 absolute left-[-15px] top-[-15px] z-10"
+                size="icon"
+                aria-label="Remove item"
                 onClick={deleteItem(itemIndex)}
-                size="sm"
-                shadow="md"
-              />
-            </Fade>
+              >
+                <TrashIcon />
+              </Button>
+            )}
           </Flex>
         </Box>
       ))}
-      <Button
-        leftIcon={<PlusIcon />}
-        onClick={createItem}
-        flexShrink={0}
-        colorScheme="orange"
-      >
+      <Button onClick={createItem} className="flex-shrink-0">
+        <PlusSignIcon />
         {addLabel}
       </Button>
     </Stack>

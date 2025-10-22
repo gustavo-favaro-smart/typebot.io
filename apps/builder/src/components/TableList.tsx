@@ -1,15 +1,9 @@
-import { PlusIcon, TrashIcon } from "@/components/icons";
-import {
-  Box,
-  Button,
-  Fade,
-  Flex,
-  IconButton,
-  SlideFade,
-  Stack,
-} from "@chakra-ui/react";
+import { Box, Flex, Stack } from "@chakra-ui/react";
 import { createId } from "@paralleldrive/cuid2";
-import React, { useEffect, useState } from "react";
+import { Button } from "@typebot.io/ui/components/Button";
+import { PlusSignIcon } from "@typebot.io/ui/icons/PlusSignIcon";
+import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
+import { useEffect, useState } from "react";
 
 const defaultItem = {
   id: createId(),
@@ -107,68 +101,49 @@ export const TableList = <T extends object>({
             pb="4"
           >
             {children({ item, onItemChange: handleCellChange(itemIndex) })}
-            <Fade
-              in={showDeleteIndex === itemIndex}
-              style={{
-                position: "absolute",
-                left: "-15px",
-                top: "-15px",
-              }}
-              unmountOnExit
-            >
-              <IconButton
-                icon={<TrashIcon />}
+            {showDeleteIndex === itemIndex && (
+              <Button
+                size="icon"
                 aria-label="Remove cell"
                 onClick={deleteItem(itemIndex)}
-                size="sm"
-                shadow="md"
-              />
-            </Fade>
-            {isOrdered && (
+                variant="secondary"
+                className="shadow-md size-6 animate-in fade-in-0 absolute left-[-8px] top-[-8px]"
+              >
+                <TrashIcon />
+              </Button>
+            )}
+            {true && itemIndex === 0 && showDeleteIndex === itemIndex && (
               <>
-                {itemIndex === 0 && (
-                  <SlideFade
-                    offsetY="-5px"
-                    in={showDeleteIndex === itemIndex}
-                    style={{
-                      position: "absolute",
-                      top: "-15px",
-                    }}
-                    unmountOnExit
-                  >
-                    <IconButton
-                      aria-label={addLabel}
-                      icon={<PlusIcon />}
-                      size="xs"
-                      shadow="md"
-                      onClick={insertItem(itemIndex - 1)}
-                    />
-                  </SlideFade>
-                )}
-                <SlideFade
-                  offsetY="5px"
-                  in={showDeleteIndex === itemIndex}
-                  style={{
-                    position: "absolute",
-                    bottom: "5px",
-                  }}
-                  unmountOnExit
+                <Button
+                  size="icon"
+                  aria-label={addLabel}
+                  onClick={insertItem(itemIndex - 1)}
+                  variant="secondary"
+                  className="shadow-md size-6 animate-in fade-in-0 slide-in-from-bottom-1 absolute top-[-10px]"
                 >
-                  <IconButton
-                    aria-label={addLabel}
-                    icon={<PlusIcon />}
-                    size="xs"
-                    shadow="md"
-                    onClick={insertItem(itemIndex)}
-                  />
-                </SlideFade>
+                  <PlusSignIcon />
+                </Button>
+                <Button
+                  size="icon"
+                  aria-label={addLabel}
+                  onClick={insertItem(itemIndex)}
+                  variant="secondary"
+                  className="shadow-md size-6 animate-in fade-in-0 slide-in-from-top-1 absolute bottom-2"
+                >
+                  <PlusSignIcon />
+                </Button>
               </>
             )}
           </Flex>
         </Box>
       ))}
       {(!isOrdered || items.length === 0) && (
-        <Button leftIcon={<PlusIcon />} onClick={createItem} flexShrink={0}>
+        <Button
+          onClick={createItem}
+          className="flex-shrink-0"
+          variant="secondary"
+        >
+          <PlusSignIcon />
           {addLabel}
         </Button>
       )}

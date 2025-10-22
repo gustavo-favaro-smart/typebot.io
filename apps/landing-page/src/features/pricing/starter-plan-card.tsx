@@ -1,6 +1,3 @@
-import { MoreInfoTooltip } from "@/components/MoreInfoTooltip";
-import { ButtonLink } from "@/components/link";
-import { registerUrl } from "@/constants";
 import {
   chatsLimits,
   prices,
@@ -8,6 +5,9 @@ import {
 } from "@typebot.io/billing/constants";
 import { formatPrice } from "@typebot.io/billing/helpers/formatPrice";
 import { Plan } from "@typebot.io/prisma/enum";
+import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
+import { CtaButtonLink } from "@/components/link";
+import { registerUrl } from "@/constants";
 import {
   PerkListItem,
   PlanNamePill,
@@ -18,7 +18,9 @@ import { chatsTooltip } from "./constants";
 
 export const StarterPlanCard = ({
   children,
-}: { children?: React.ReactNode }) => (
+}: {
+  children?: React.ReactNode;
+}) => (
   <PricingCardRoot>
     <PlanNamePill className="bg-orange-8 absolute top-0 flex flex-col">
       Starter
@@ -31,13 +33,13 @@ export const StarterPlanCard = ({
       {children}
     </div>
     <PricingCardFooter>
-      <ButtonLink
-        variant="ctaSecondary"
+      <CtaButtonLink
+        variant="secondary"
         size="lg"
         href={`${registerUrl}?subscribePlan=${Plan.STARTER}`}
       >
         Subscribe now
-      </ButtonLink>
+      </CtaButtonLink>
     </PricingCardFooter>
   </PricingCardRoot>
 );
@@ -52,7 +54,7 @@ export const StarterPlanPerksList = () => (
     </PerkListItem>
     <PerkListItem>
       <div className="flex flex-col gap-1">
-        <span className="inline-flex gap-1">
+        <span className="inline-flex">
           <span className="font-bold">
             {new Intl.NumberFormat().format(chatsLimits.STARTER)} chats
           </span>

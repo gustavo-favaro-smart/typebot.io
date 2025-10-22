@@ -1,10 +1,10 @@
-import { writeFileSync } from "fs";
 import { confirm, isCancel, text } from "@clack/prompts";
 import {
   removeObjectsFromUser,
   removeObjectsFromWorkspace,
 } from "@typebot.io/lib/s3/removeObjectsRecursively";
 import prisma from "@typebot.io/prisma";
+import { writeFileSync } from "fs";
 
 export const destroyUser = async (userEmail?: string) => {
   const email =
@@ -36,6 +36,21 @@ export const destroyUser = async (userEmail?: string) => {
 
   if (workspaces.length === 0) {
     console.log("No workspaces found");
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (user) {
+      console.log(`User found: ${user.id}`);
+      const proceed = await confirm({ message: "Remove user?" });
+      if (!proceed || typeof proceed !== "boolean") {
+        console.log("Aborting");
+        return;
+      }
+      await prisma.user.delete({ where: { id: user.id } });
+      await removeObjectsFromUser(user.id);
+      console.log(`User deleted.`, JSON.stringify(user, null, 2));
+    }
     return;
   }
 
@@ -63,6 +78,7 @@ export const destroyUser = async (userEmail?: string) => {
         id: w.id,
         plan: w.plan,
         members: w.members,
+        stripeId: w.stripeId,
       })),
       null,
       2,
@@ -85,8 +101,8 @@ export const destroyUser = async (userEmail?: string) => {
       console.log(
         `Workspace ${workspace.name} has ${totalResults} results. We should delete them first...`,
       );
-      const proceed = await confirm({ message: "Proceed?" });
-      if (!proceed || typeof proceed !== "boolean") {
+      const innerProceed = await confirm({ message: "Proceed?" });
+      if (!innerProceed || typeof innerProceed !== "boolean") {
         console.log("Aborting");
         return;
       }
@@ -94,9 +110,7 @@ export const destroyUser = async (userEmail?: string) => {
     for (const typebot of workspace.typebots.filter(
       (t) => t.results.length > 0,
     )) {
-      for (const result of typebot.results) {
-        await prisma.result.deleteMany({ where: { id: result.id } });
-      }
+      await deleteTypebotResultsInBatches(typebot.results.map((r) => r.id));
     }
     await prisma.workspace.delete({ where: { id: workspace.id } });
     await removeObjectsFromWorkspace(workspace.id);
@@ -106,4 +120,19 @@ export const destroyUser = async (userEmail?: string) => {
   await removeObjectsFromUser(user.id);
 
   console.log(`User deleted.`, JSON.stringify(user, null, 2));
+};
+
+const deleteTypebotResultsInBatches = async (resultIds: readonly string[]) => {
+  const BATCH_SIZE = 1_000;
+  let deletedCount = 0;
+
+  for (let index = 0; index < resultIds.length; index += BATCH_SIZE) {
+    const batchIds = resultIds.slice(index, index + BATCH_SIZE);
+    const { count } = await prisma.result.deleteMany({
+      where: { id: { in: batchIds } },
+    });
+    deletedCount += count;
+
+    console.log(`Deleted ${deletedCount}/${resultIds.length} results…`);
+  }
 };

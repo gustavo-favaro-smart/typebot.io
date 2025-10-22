@@ -1,12 +1,7 @@
-import { ConfirmModal } from "@/components/ConfirmModal";
-import { TimeSince } from "@/components/TimeSince";
-import { toast } from "@/lib/toast";
 import {
-  Button,
   Checkbox,
   Flex,
   Heading,
-  Skeleton,
   Stack,
   Table,
   TableContainer,
@@ -20,12 +15,17 @@ import {
 } from "@chakra-ui/react";
 import { T, useTranslate } from "@tolgee/react";
 import { byId, isDefined } from "@typebot.io/lib/utils";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Skeleton } from "@typebot.io/ui/components/Skeleton";
 import type { ClientUser } from "@typebot.io/user/schemas";
-import React, { useState } from "react";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TimeSince } from "@/components/TimeSince";
+import { toast } from "@/lib/toast";
 import { useApiTokens } from "../hooks/useApiTokens";
 import { deleteApiTokenQuery } from "../queries/deleteApiTokenQuery";
 import type { ApiTokenFromServer } from "../types";
-import { CreateTokenModal } from "./CreateTokenModal";
+import { CreateApiTokenDialog } from "./CreateApiTokenDialog";
 
 type Props = { user: ClientUser };
 
@@ -35,7 +35,7 @@ export const ApiTokensList = ({ user }: Props) => {
     userId: user.id,
     onError: (e) =>
       toast({
-        context: "Failed to fetch tokens",
+        title: "Failed to fetch tokens",
         description: e.message,
       }),
   });
@@ -63,10 +63,10 @@ export const ApiTokensList = ({ user }: Props) => {
       <Heading fontSize="2xl">{t("account.apiTokens.heading")}</Heading>
       <Text>{t("account.apiTokens.description")}</Text>
       <Flex justifyContent="flex-end">
-        <Button onClick={onCreateOpen}>
+        <Button onClick={onCreateOpen} variant="secondary">
           {t("account.apiTokens.createButton.label")}
         </Button>
-        <CreateTokenModal
+        <CreateApiTokenDialog
           userId={user.id}
           isOpen={isCreateOpen}
           onNewToken={refreshListWithNewToken}
@@ -93,8 +93,7 @@ export const ApiTokensList = ({ user }: Props) => {
                 <Td>
                   <Button
                     size="xs"
-                    colorScheme="red"
-                    variant="outline"
+                    variant="destructive"
                     onClick={() => setDeletingId(token.id)}
                   >
                     {t("account.apiTokens.deleteButton.label")}
@@ -109,34 +108,34 @@ export const ApiTokensList = ({ user }: Props) => {
                     <Checkbox isDisabled />
                   </Td>
                   <Td>
-                    <Skeleton h="5px" />
+                    <Skeleton className="h-1" />
                   </Td>
                   <Td>
-                    <Skeleton h="5px" />
+                    <Skeleton className="h-1" />
                   </Td>
                 </Tr>
               ))}
           </Tbody>
         </Table>
       </TableContainer>
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isDefined(deletingId)}
         onConfirm={() => deleteToken(deletingId)}
         onClose={() => setDeletingId(undefined)}
-        message={
-          <Text>
-            <T
-              keyName="account.apiTokens.deleteConfirmationMessage"
-              params={{
-                strong: (
-                  <strong>{apiTokens?.find(byId(deletingId))?.name}</strong>
-                ),
-              }}
-            />
-          </Text>
-        }
+        actionType="destructive"
         confirmButtonLabel={t("account.apiTokens.deleteButton.label")}
-      />
+      >
+        <Text>
+          <T
+            keyName="account.apiTokens.deleteConfirmationMessage"
+            params={{
+              strong: (
+                <strong>{apiTokens?.find(byId(deletingId))?.name}</strong>
+              ),
+            }}
+          />
+        </Text>
+      </ConfirmDialog>
     </Stack>
   );
 };

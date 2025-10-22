@@ -21,9 +21,10 @@ import type {
   TypebotInSession,
   TypebotInSessionV5,
 } from "@typebot.io/chat-session/schemas";
-import { env } from "@typebot.io/env";
-import { isDefined, isNotEmpty, omit } from "@typebot.io/lib/utils";
+import { byId, isDefined, isNotEmpty, omit } from "@typebot.io/lib/utils";
 import type { Prisma } from "@typebot.io/prisma/types";
+import { resultSchema } from "@typebot.io/results/schemas/results";
+import { parseVariablesInRichText } from "@typebot.io/rich-text/parseVariablesInRichText";
 import type { SessionStore } from "@typebot.io/runtime-session-store";
 import {
   defaultSettings,
@@ -36,27 +37,26 @@ import {
 } from "@typebot.io/theme/constants";
 import type { Theme } from "@typebot.io/theme/schemas";
 import { deepParseVariables } from "@typebot.io/variables/deepParseVariables";
-import { injectVariablesFromExistingResult } from "@typebot.io/variables/injectVariablesFromExistingResult";
+import { injectVariableValues } from "@typebot.io/variables/injectVariableValues";
 import {
   getVariablesToParseInfoInText,
   parseVariables,
 } from "@typebot.io/variables/parseVariables";
-import { prefillVariables } from "@typebot.io/variables/prefillVariables";
-import {
-  type SetVariableHistoryItem,
-  type Variable,
-  type VariableWithValue,
-  variableWithValueSchema,
+import type {
+  SetVariableHistoryItem,
+  Variable,
 } from "@typebot.io/variables/schemas";
-import { z } from "@typebot.io/zod";
+import { transformPrefilledVariablesToVariables } from "@typebot.io/variables/transformPrefilledVariablesToVariables";
 import { NodeType, parse } from "node-html-parser";
+import { getStartingPoint } from "./getStartingPoint";
 import { isTypebotInSessionAtLeastV6 } from "./helpers/isTypebotInSessionAtLeastV6";
-import { parseVariablesInRichText } from "./parseBubbleBlock";
 import { parseDynamicTheme } from "./parseDynamicTheme";
 import { findPublicTypebot } from "./queries/findPublicTypebot";
 import { findResult } from "./queries/findResult";
 import { findTypebot } from "./queries/findTypebot";
 import { startBotFlow } from "./startBotFlow";
+import { updateVariablesInSession } from "./updateVariablesInSession";
+import type { WalkFlowStartingPoint } from "./walkFlowForward";
 
 type StartParams =
   | ({
@@ -90,15 +90,9 @@ export const startSession = async ({
   const typebot = await getTypebot(startParams);
   Sentry.setUser({ id: typebot.id });
 
-  const prefilledVariables = startParams.prefilledVariables
-    ? prefillVariables(typebot.variables, startParams.prefilledVariables)
-    : typebot.variables;
-
-  const result = await getResult({
+  const result = await getOrInitResult({
     resultId: startParams.type === "live" ? startParams.resultId : undefined,
     isPreview: startParams.type === "preview",
-    typebotId: typebot.id,
-    prefilledVariables,
     isRememberUserEnabled:
       typebot.settings.general?.rememberUser?.isEnabled ??
       (isDefined(typebot.settings.general?.isNewResultOnRefreshEnabled)
@@ -106,19 +100,22 @@ export const startSession = async ({
         : defaultSettings.general.rememberUser.isEnabled),
   });
 
-  const startVariables =
-    result && result.variables.length > 0
-      ? injectVariablesFromExistingResult(prefilledVariables, result.variables)
-      : prefilledVariables;
+  const startVariables = result
+    ? injectVariableValues({
+        variables: typebot.variables,
+        variablesWithValue: result.variables,
+      })
+    : typebot.variables;
 
   const typebotInSession = convertStartTypebotToTypebotInSession(
     typebot,
     startVariables,
   );
 
-  const initialState: SessionState = {
+  let initialState: SessionState = {
     version: "3",
     workspaceId: typebot.workspaceId,
+    publicTypebotId: typebot.publicTypebotId,
     typebotsQueue: [
       {
         resultId: result?.id,
@@ -170,6 +167,36 @@ export const startSession = async ({
     ...initialSessionState,
   };
 
+  const setVariableHistory: SetVariableHistoryItem[] = [];
+
+  if (startParams.prefilledVariables) {
+    const startingPoint = getStartingPoint({
+      typebot: typebotInSession,
+      startFrom: "startFrom" in startParams ? startParams.startFrom : undefined,
+    });
+
+    const firstBlockId = startingPoint
+      ? getStartingPointFirstBlockId(startingPoint, {
+          typebot: typebotInSession,
+        })
+      : undefined;
+
+    if (firstBlockId) {
+      const { updatedState, newSetVariableHistory } = updateVariablesInSession({
+        state: initialState,
+        newVariables: transformPrefilledVariablesToVariables(
+          startParams.prefilledVariables,
+          {
+            existingVariables: typebotInSession.variables,
+          },
+        ),
+        currentBlockId: firstBlockId,
+      });
+      initialState = updatedState;
+      setVariableHistory.push(...newSetVariableHistory);
+    }
+  }
+
   if (startParams.isOnlyRegistering) {
     return {
       newSessionState: initialState,
@@ -188,7 +215,7 @@ export const startSession = async ({
       dynamicTheme: parseDynamicTheme({ state: initialState, sessionStore }),
       messages: [],
       visitedEdges: [],
-      setVariableHistory: [],
+      setVariableHistory,
     };
   }
 
@@ -199,15 +226,16 @@ export const startSession = async ({
     newSessionState,
     logs,
     visitedEdges,
-    setVariableHistory,
+    setVariableHistory: newSetVariableHistory,
   } = await startBotFlow({
     version,
     sessionStore,
     message: startParams.message,
     state: initialState,
-    startFrom: startParams.startFrom,
+    startFrom: "startFrom" in startParams ? startParams.startFrom : undefined,
     textBubbleContentFormat: startParams.textBubbleContentFormat,
   });
+  setVariableHistory.push(...newSetVariableHistory);
 
   const clientSideActions = startFlowClientActions ?? [];
 
@@ -294,15 +322,11 @@ export const startSession = async ({
   };
 };
 
-const getTypebot = async (startParams: StartParams): Promise<StartTypebot> => {
+const getTypebot = async (startParams: StartParams) => {
   if (startParams.type === "preview" && startParams.typebot)
     return startParams.typebot;
 
-  if (
-    startParams.type === "preview" &&
-    !startParams.userId &&
-    !env.NEXT_PUBLIC_E2E_TEST
-  )
+  if (startParams.type === "preview" && !startParams.userId)
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You need to be authenticated to perform this action",
@@ -319,9 +343,10 @@ const getTypebot = async (startParams: StartParams): Promise<StartTypebot> => {
   const parsedTypebot =
     typebotQuery && "typebot" in typebotQuery
       ? {
+          publicTypebotId: typebotQuery.id,
           id: typebotQuery.typebotId,
           ...omit(typebotQuery.typebot, "workspace"),
-          ...omit(typebotQuery, "typebot", "typebotId"),
+          ...omit(typebotQuery, "typebot", "typebotId", "id"),
         }
       : typebotQuery;
 
@@ -354,16 +379,13 @@ const getTypebot = async (startParams: StartParams): Promise<StartTypebot> => {
   return startTypebotSchema.parse(parsedTypebot);
 };
 
-const getResult = async ({
+const getOrInitResult = async ({
   isPreview,
   resultId,
-  prefilledVariables,
   isRememberUserEnabled,
 }: {
   resultId: string | undefined;
   isPreview: boolean;
-  typebotId: string;
-  prefilledVariables: Variable[];
   isRememberUserEnabled: boolean;
 }) => {
   if (isPreview) return;
@@ -372,30 +394,11 @@ const getResult = async ({
       ? await findResult({ id: resultId })
       : undefined;
 
-  const prefilledVariableWithValue = prefilledVariables.filter(
-    (prefilledVariable) => isDefined(prefilledVariable.value),
-  );
-
-  const existingVariables = z
-    .array(variableWithValueSchema)
-    .or(z.undefined())
-    .parse(existingResult?.variables);
-
-  const updatedResult = {
-    variables: prefilledVariableWithValue.concat(
-      existingVariables?.filter(
-        (resultVariable) =>
-          isDefined(resultVariable.value) &&
-          !prefilledVariableWithValue.some(
-            (prefilledVariable) =>
-              prefilledVariable.name === resultVariable.name,
-          ),
-      ) ?? [],
-    ) as VariableWithValue[],
-  };
   return {
     id: existingResult?.id ?? createId(),
-    variables: updatedResult.variables,
+    variables: existingResult?.variables
+      ? resultSchema.shape.variables.parse(existingResult.variables)
+      : undefined,
     answers: existingResult?.answers ?? [],
   };
 };
@@ -562,7 +565,9 @@ const extractVariableIdsUsedForTranscript = (
             sessionStore,
           },
         );
-        parsedVariableIds.forEach((variableId) => variableIds.add(variableId));
+        parsedVariableIds.forEach((variableId) => {
+          variableIds.add(variableId);
+        });
       }
       if (
         block.type === BubbleBlockType.IMAGE ||
@@ -574,14 +579,14 @@ const extractVariableIdsUsedForTranscript = (
           ...parseVarParams,
           sessionStore,
         });
-        variablesInfo.forEach((variableInfo) =>
+        variablesInfo.forEach((variableInfo) => {
           variableInfo.variableId
             ? variableIds.add(variableInfo.variableId ?? "")
-            : undefined,
-        );
+            : undefined;
+        });
       }
       if (block.type === LogicBlockType.CONDITION) {
-        block.items.forEach((item) =>
+        block.items.forEach((item) => {
           item.content?.comparisons?.forEach((comparison) => {
             if (comparison.variableId) variableIds.add(comparison.variableId);
             if (comparison.value) {
@@ -598,10 +603,29 @@ const extractVariableIdsUsedForTranscript = (
                   : undefined;
               });
             }
-          }),
-        );
+          });
+        });
       }
     });
   });
   return [...variableIds];
+};
+
+const getStartingPointFirstBlockId = (
+  startingPoint: WalkFlowStartingPoint,
+  {
+    typebot,
+  }: {
+    typebot: TypebotInSession;
+  },
+): string | undefined => {
+  if (startingPoint.type === "group") {
+    return startingPoint.group.blocks.at(0)?.id;
+  }
+  const nextEdge = typebot.edges.find(byId(startingPoint.nextEdge?.id));
+  if (!nextEdge) throw new Error("Next edge not found");
+  if (nextEdge.to.blockId) return nextEdge.to.blockId;
+  const nextGroup = typebot.groups.find(byId(nextEdge.to.groupId));
+  if (!nextGroup) throw new Error("Next group not found");
+  return nextGroup.blocks.at(0)?.id;
 };

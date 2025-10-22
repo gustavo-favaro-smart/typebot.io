@@ -1,15 +1,4 @@
-import type { IncomingMessage } from "http";
-import { ErrorPage } from "@/components/ErrorPage";
-import { NotFoundPage } from "@/components/NotFoundPage";
-import { RootPage } from "@/components/RootPage";
-import {
-  type TypebotPageProps,
-  TypebotPageV2,
-} from "@/components/TypebotPageV2";
-import {
-  TypebotPageV3,
-  type TypebotV3PageProps,
-} from "@/components/TypebotPageV3";
+import * as Sentry from "@sentry/nextjs";
 import { env } from "@typebot.io/env";
 import { isNotDefined } from "@typebot.io/lib/utils";
 import prisma from "@typebot.io/prisma";
@@ -22,7 +11,19 @@ import {
 } from "@typebot.io/theme/constants";
 import { themeSchema } from "@typebot.io/theme/schemas";
 import type { PublicTypebot } from "@typebot.io/typebot/schemas/publicTypebot";
+import type { IncomingMessage } from "http";
 import type { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { ErrorPage } from "@/components/ErrorPage";
+import { NotFoundPage } from "@/components/NotFoundPage";
+import { RootPage } from "@/components/RootPage";
+import {
+  type TypebotPageProps,
+  TypebotPageV2,
+} from "@/components/TypebotPageV2";
+import {
+  TypebotPageV3,
+  type TypebotV3PageProps,
+} from "@/components/TypebotPageV3";
 
 // Browsers that doesn't support ES modules and/or web components
 const incompatibleBrowsers = [
@@ -67,16 +68,14 @@ export const getServerSideProps: GetServerSideProps = async (
     if (!host) return { props: {} };
     const viewerUrls = env.NEXT_PUBLIC_VIEWER_URL;
     log(`viewerUrls: ${viewerUrls}`);
-    const isMatchingViewerUrl = env.NEXT_PUBLIC_E2E_TEST
-      ? true
-      : viewerUrls.some(
-          (url) =>
-            host.split(":")[0].includes(url.split("//")[1].split(":")[0]) ||
-            (forwardedHost &&
-              forwardedHost
-                .split(":")[0]
-                .includes(url.split("//")[1].split(":")[0])),
-        );
+    const isMatchingViewerUrl = viewerUrls.some(
+      (url) =>
+        host.split(":")[0].includes(url.split("//")[1].split(":")[0]) ||
+        (forwardedHost &&
+          forwardedHost
+            .split(":")[0]
+            .includes(url.split("//")[1].split(":")[0])),
+    );
     log(`isMatchingViewerUrl: ${isMatchingViewerUrl}`);
     if (isMatchingViewerUrl && pathname === "/") {
       // Early return, will just show a root page
@@ -147,6 +146,10 @@ const getTypebotFromPublicId = async (publicId?: string) => {
   if (isNotDefined(publishedTypebot)) return null;
   const theme = themeSchema.parse(publishedTypebot.theme);
   const settings = settingsSchema.parse(publishedTypebot.settings);
+  if (!publishedTypebot.version) {
+    Sentry.setTag("typebotId", publishedTypebot.typebotId);
+    Sentry.captureMessage("Is using TypebotPageV2");
+  }
   return publishedTypebot.version
     ? {
         name: publishedTypebot.typebot.name,
@@ -199,6 +202,10 @@ const getTypebotFromCustomDomain = async (customDomain: string) => {
     },
   });
   if (isNotDefined(publishedTypebot)) return null;
+  if (!publishedTypebot.version) {
+    Sentry.setTag("typebotId", publishedTypebot.typebotId);
+    Sentry.captureMessage("Is using TypebotPageV2");
+  }
   const theme = themeSchema.parse(publishedTypebot.theme);
   const settings = settingsSchema.parse(publishedTypebot.settings);
   return publishedTypebot.version

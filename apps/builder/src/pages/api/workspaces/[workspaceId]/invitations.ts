@@ -1,6 +1,5 @@
-import { getAuthenticatedUser } from "@/features/auth/helpers/getAuthenticatedUser";
 import { getSeatsLimit } from "@typebot.io/billing/helpers/getSeatsLimit";
-import { sendWorkspaceMemberInvitationEmail } from "@typebot.io/emails/emails/WorkspaceMemberInvitationEmail";
+import { sendWorkspaceMemberInvitationEmail } from "@typebot.io/emails/transactional/WorkspaceMemberInvitationEmail";
 import { env } from "@typebot.io/env";
 import {
   forbidden,
@@ -11,6 +10,7 @@ import prisma from "@typebot.io/prisma";
 import { WorkspaceRole } from "@typebot.io/prisma/enum";
 import type { Prisma } from "@typebot.io/prisma/types";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getAuthenticatedUser } from "@/features/auth/helpers/getAuthenticatedUser";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const user = await getAuthenticatedUser(req, res);
@@ -57,14 +57,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           userId: existingUser.id,
         },
       });
-      if (!env.NEXT_PUBLIC_E2E_TEST)
-        await sendWorkspaceMemberInvitationEmail({
-          to: data.email,
-          workspaceName: workspace.name,
-          guestEmail: data.email,
-          url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${workspace.id}`,
-          hostEmail: user.email ?? "",
-        });
+      await sendWorkspaceMemberInvitationEmail({
+        workspaceName: workspace.name,
+        guestEmail: data.email,
+        url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${workspace.id}`,
+        hostEmail: user.email ?? "",
+      });
       return res.send({
         member: {
           userId: existingUser.id,
@@ -76,14 +74,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
     } else {
       const invitation = await prisma.workspaceInvitation.create({ data });
-      if (!env.NEXT_PUBLIC_E2E_TEST)
-        await sendWorkspaceMemberInvitationEmail({
-          to: data.email,
-          workspaceName: workspace.name,
-          guestEmail: data.email,
-          url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${workspace.id}`,
-          hostEmail: user.email ?? "",
-        });
+      await sendWorkspaceMemberInvitationEmail({
+        workspaceName: workspace.name,
+        guestEmail: data.email,
+        url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${workspace.id}`,
+        hostEmail: user.email ?? "",
+      });
       return res.send({ invitation });
     }
   }

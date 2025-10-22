@@ -1,3 +1,12 @@
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
+import { Bubble } from "@typebot.io/react";
+import { buttonVariants } from "@typebot.io/ui/components/Button";
+import { Cancel01Icon } from "@typebot.io/ui/icons/Cancel01Icon";
+import { Menu01Icon } from "@typebot.io/ui/icons/Menu01Icon";
+import { cn } from "@typebot.io/ui/lib/cn";
+import { cx } from "@typebot.io/ui/lib/cva";
+import { AnimatePresence, motion } from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@/components/IconButton";
 import { TypebotLogoFull } from "@/components/TypebotLogo";
 import {
@@ -11,17 +20,7 @@ import {
 } from "@/constants";
 import { useWindowSize } from "@/features/homepage/hooks/useWindowSize";
 import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
-import { Link, useLocation, useRouter } from "@tanstack/react-router";
-import { Bubble } from "@typebot.io/react";
-import { buttonVariants } from "@typebot.io/ui/components/Button";
-import { CloseIcon } from "@typebot.io/ui/icons/CloseIcon";
-import { MenuIcon } from "@typebot.io/ui/icons/MenuIcon";
-import { cn } from "@typebot.io/ui/lib/cn";
-import { cx } from "@typebot.io/ui/lib/cva";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import React from "react";
-import { ButtonLink, TextLink } from "./link";
+import { ButtonLink, CtaButtonLink, TextLink } from "./link";
 
 const links = [
   {
@@ -166,7 +165,7 @@ const Mobile = React.forwardRef<HTMLElement, Props>(function Mobile(
           onClick={toggleHeaderExpansion}
           className="transition-none"
         >
-          {isOpened ? <CloseIcon /> : <MenuIcon />}
+          {isOpened ? <Cancel01Icon /> : <Menu01Icon />}
         </IconButton>
       </div>
       <AnimatePresence mode="popLayout">
@@ -190,13 +189,12 @@ const Mobile = React.forwardRef<HTMLElement, Props>(function Mobile(
                 </TextLink>
               ))}
             </div>
-            <ButtonLink
-              variant="cta"
+            <CtaButtonLink
               href={signinUrl}
               className={buttonVariants({ size: "lg", variant: "outline" })}
             >
               Sign in
-            </ButtonLink>
+            </CtaButtonLink>
           </motion.nav>
         )}
       </AnimatePresence>
@@ -299,13 +297,13 @@ const Desktop = React.forwardRef<
           </ButtonLink>
         ))}
         {isAuthenticated ? (
-          <ButtonLink variant="cta" size="sm" href={dashboardUrl}>
+          <CtaButtonLink size="sm" href={dashboardUrl}>
             Go to dashboard
-          </ButtonLink>
+          </CtaButtonLink>
         ) : (
-          <ButtonLink variant="cta" size="sm" href={registerUrl}>
+          <CtaButtonLink size="sm" href={registerUrl}>
             Get started free
-          </ButtonLink>
+          </CtaButtonLink>
         )}
       </nav>
       {isChatBubbleMounted && pathname === "/" && (

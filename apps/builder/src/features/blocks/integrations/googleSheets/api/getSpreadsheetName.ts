@@ -1,9 +1,9 @@
-import { isReadWorkspaceFobidden } from "@/features/workspace/helpers/isReadWorkspaceFobidden";
-import { authenticatedProcedure } from "@/helpers/server/trpc";
 import { TRPCError } from "@trpc/server";
 import { getGoogleSpreadsheet } from "@typebot.io/credentials/getGoogleSpreadsheet";
 import prisma from "@typebot.io/prisma";
 import { z } from "@typebot.io/zod";
+import { isReadWorkspaceFobidden } from "@/features/workspace/helpers/isReadWorkspaceFobidden";
+import { authenticatedProcedure } from "@/helpers/server/trpc";
 
 export const getSpreadsheetName = authenticatedProcedure
   .input(
@@ -51,22 +51,22 @@ export const getSpreadsheetName = authenticatedProcedure
         });
 
       try {
-        const googleSheet = await getGoogleSpreadsheet({
+        const googleSheetResponse = await getGoogleSpreadsheet({
           credentialsId: credentials.id,
           spreadsheetId,
           workspaceId,
         });
 
-        if (!googleSheet)
+        if (googleSheetResponse.type === "error")
           throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Google sheet not found",
+            code: "BAD_REQUEST",
+            message: googleSheetResponse.log.description,
           });
 
-        await googleSheet.loadInfo();
+        await googleSheetResponse.spreadsheet.loadInfo();
 
-        return { name: googleSheet.title };
-      } catch (e) {
+        return { name: googleSheetResponse.spreadsheet.title };
+      } catch (_e) {
         return { name: "" };
       }
     },

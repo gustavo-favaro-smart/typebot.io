@@ -1,5 +1,6 @@
-import { ChevronLeftIcon } from "@/components/icons";
-import { Button, Flex, Heading, Link, Text, VStack } from "@chakra-ui/react";
+import { Flex, Heading, Text, VStack } from "@chakra-ui/react";
+import { ArrowLeft01Icon } from "@typebot.io/ui/icons/ArrowLeft01Icon";
+import { ButtonLink } from "./ButtonLink";
 
 type Props = {
   resourceName: string;
@@ -12,14 +13,10 @@ export const NotFoundPage = ({ resourceName }: Props) => {
           <Heading>404</Heading>
           <Text fontSize="xl">{resourceName} not found.</Text>
         </VStack>
-        <Button
-          as={Link}
-          href="/typebots"
-          colorScheme="orange"
-          leftIcon={<ChevronLeftIcon />}
-        >
+        <ButtonLink href="/typebots">
+          <ArrowLeft01Icon />
           Dashboard
-        </Button>
+        </ButtonLink>
       </VStack>
     </Flex>
   );

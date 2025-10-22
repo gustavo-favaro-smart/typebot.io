@@ -1,6 +1,6 @@
-import { trackAnalyticsPageView } from "@/features/telemetry/helpers/trackAnalyticsPageView";
 import { env } from "@typebot.io/env";
 import type { GetServerSidePropsContext } from "next";
+import { trackAnalyticsPageView } from "@/features/telemetry/helpers/trackAnalyticsPageView";
 import ResultsPage from "../results";
 
 const AnalyticsPage = ResultsPage;
@@ -8,7 +8,7 @@ const AnalyticsPage = ResultsPage;
 export const getServerSideProps = async (
   context: GetServerSidePropsContext,
 ) => {
-  if (!env.NEXT_PUBLIC_POSTHOG_KEY || env.NEXT_PUBLIC_E2E_TEST)
+  if (!env.NEXT_PUBLIC_POSTHOG_KEY)
     return {
       props: {},
     };

@@ -1,9 +1,12 @@
-import { toast } from "@/lib/toast";
-import { Button, type ButtonProps, chakra } from "@chakra-ui/react";
-import { useTranslate } from "@tolgee/react";
 import { parseUnknownClientError } from "@typebot.io/lib/parseUnknownClientError";
 import type { Typebot } from "@typebot.io/typebot/schemas/typebot";
-import React, { type ChangeEvent } from "react";
+import {
+  type ButtonProps,
+  buttonVariants,
+} from "@typebot.io/ui/components/Button";
+import { cn } from "@typebot.io/ui/lib/cn";
+import type { ChangeEvent } from "react";
+import { toast } from "@/lib/toast";
 
 type Props = {
   onNewTypebot: (typebot: Typebot) => void;
@@ -11,10 +14,10 @@ type Props = {
 
 export const ImportTypebotFromFileButton = ({
   onNewTypebot,
+  variant,
+  size,
   ...props
 }: Props) => {
-  const { t } = useTranslate();
-
   const handleInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target?.files) return;
     const file = e.target.files[0];
@@ -35,16 +38,19 @@ export const ImportTypebotFromFileButton = ({
 
   return (
     <>
-      <chakra.input
+      <input
         type="file"
         id="file-input"
-        display="none"
+        className="hidden"
         onChange={handleInputChange}
         accept=".json"
       />
-      <Button as="label" htmlFor="file-input" cursor="pointer" {...props}>
+      <label
+        htmlFor="file-input"
+        className={cn(buttonVariants({ variant, size }), props.className)}
+      >
         {props.children}
-      </Button>
+      </label>
     </>
   );
 };

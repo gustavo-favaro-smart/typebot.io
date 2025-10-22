@@ -1,26 +1,21 @@
-import { CopyIcon, TrashIcon } from "@/components/icons";
-import { headerHeight } from "@/features/editor/constants";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import {
-  Button,
-  HStack,
-  IconButton,
-  useColorModeValue,
-  useEventListener,
-} from "@chakra-ui/react";
+import { useEventListener } from "@chakra-ui/react";
 import { EventType } from "@typebot.io/events/constants";
 import type { TDraggableEvent } from "@typebot.io/events/schemas";
 import type { GroupV6 } from "@typebot.io/groups/schemas";
 import type { Edge } from "@typebot.io/typebot/schemas/edge";
+import { Button } from "@typebot.io/ui/components/Button";
+import { Copy01Icon } from "@typebot.io/ui/icons/Copy01Icon";
+import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
 import {
   extractVariableIdReferencesInObject,
   extractVariableIdsFromObject,
 } from "@typebot.io/variables/extractVariablesFromObject";
 import type { Variable } from "@typebot.io/variables/schemas";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { toast } from "@/lib/toast";
 import { projectMouse } from "../helpers/projectMouse";
 import { useSelectionStore } from "../hooks/useSelectionStore";
 import type { Coordinates } from "../types";
@@ -41,7 +36,6 @@ export const ElementsSelectionMenu = ({
   const [mousePosition, setMousePosition] = useState<Coordinates>();
   const { typebot, deleteGroups, pasteGroups, pasteEvents, deleteEvents } =
     useTypebot();
-  const ref = useRef<HTMLDivElement>(null);
 
   const groupsInClipboard = useSelectionStore(
     useShallow((state) => state.elementsInClipboard),
@@ -54,8 +48,6 @@ export const ElementsSelectionMenu = ({
         setFocusedElements: state.setFocusedElements,
       })),
     );
-
-  useEventListener("pointerup", (e) => e.stopPropagation(), ref.current);
 
   useEventListener("mousemove", (e) => {
     setMousePosition({
@@ -141,7 +133,7 @@ export const ElementsSelectionMenu = ({
     copy: () => {
       const clipboard = handleCopy();
       if (!clipboard) return;
-      toast("Elements copied to clipboard");
+      toast({ description: "Elements copied to clipboard", type: "info" });
     },
     cut: () => {
       handleCopy();
@@ -163,47 +155,35 @@ export const ElementsSelectionMenu = ({
     },
   });
 
+  if (focusedElementIds.length === 0 || isReadOnly) return null;
   return (
-    <HStack
-      ref={ref}
-      rounded="md"
-      spacing={0}
-      bgColor={useColorModeValue("white", "gray.950")}
-      shadow="md"
-    >
-      <Button
-        pointerEvents={"none"}
-        color={useColorModeValue("orange.500", "orange.200")}
-        borderRightWidth="1px"
-        borderRightRadius="none"
-        bgColor={useColorModeValue("white", undefined)}
-        size="sm"
-      >
+    <div className="flex items-stretch gap-1">
+      <span className="text-sm text-orange-10 font-medium px-2 inline-flex items-center select-none">
         {focusedElementIds.length} selected
-      </Button>
-      <IconButton
-        borderRightWidth="1px"
-        borderRightRadius="none"
-        borderLeftRadius="none"
+      </span>
+      <Button
         aria-label="Copy"
         onClick={() => {
           handleCopy();
-          toast("Groups copied to clipboard");
+          toast({ description: "Groups copied to clipboard", type: "info" });
         }}
-        bgColor={useColorModeValue("white", undefined)}
-        icon={<CopyIcon />}
-        size="sm"
-      />
+        className="size-8"
+        size="icon"
+        variant="secondary"
+      >
+        <Copy01Icon />
+      </Button>
 
-      <IconButton
+      <Button
         aria-label="Delete"
-        borderLeftRadius="none"
-        bgColor={useColorModeValue("white", undefined)}
-        icon={<TrashIcon />}
-        size="sm"
+        className="size-8"
+        size="icon"
+        variant="secondary"
         onClick={handleDelete}
-      />
-    </HStack>
+      >
+        <TrashIcon />
+      </Button>
+    </div>
   );
 };
 export const extractVariablesFromCopiedElements = (

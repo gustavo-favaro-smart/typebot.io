@@ -1,8 +1,7 @@
-import { TextInput } from "@/components/inputs";
-import { SwitchWithLabel } from "@/components/inputs/SwitchWithLabel";
 import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import type { CommandEvent } from "@typebot.io/events/schemas";
+import { DebouncedTextInput } from "@/components/inputs/DebouncedTextInput";
 
 export const CommandEventSettings = ({
   options,
@@ -15,11 +14,10 @@ export const CommandEventSettings = ({
 
   return (
     <Stack>
-      <TextInput
+      <DebouncedTextInput
         placeholder={t("blocks.events.command.settings.command.placeholder")}
         defaultValue={options?.command}
-        onChange={(command) => onOptionsChange({ ...options, command })}
-        withVariableButton={false}
+        onValueChange={(command) => onOptionsChange({ ...options, command })}
       />
     </Stack>
   );

@@ -1,30 +1,29 @@
 import {
-  Alert,
-  AlertIcon,
   Box,
   Flex,
   Grid,
   GridItem,
   HStack,
-  Image,
-  Link,
-  Spinner,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { env } from "@typebot.io/env";
 import { isDefined } from "@typebot.io/lib/utils";
+import { Alert } from "@typebot.io/ui/components/Alert";
+import { LoaderCircleIcon } from "@typebot.io/ui/icons/LoaderCircleIcon";
+import { TriangleAlertIcon } from "@typebot.io/ui/icons/TriangleAlertIcon";
+import { cx } from "@typebot.io/ui/lib/cva";
 import {
+  createClient,
   type ErrorResponse,
   type Video,
   type Videos,
-  createClient,
 } from "pexels";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DropdownList } from "../DropdownList";
-import { TextLink } from "../TextLink";
-import { TextInput } from "../inputs";
+import { BasicSelect } from "../inputs/BasicSelect";
+import { DebouncedTextInput } from "../inputs/DebouncedTextInput";
 import { PexelsLogo } from "../logos/PexelsLogo";
+import { TextLink } from "../TextLink";
 
 const client = createClient(env.NEXT_PUBLIC_PEXELS_API_KEY ?? "dummy");
 
@@ -129,44 +128,49 @@ export const PexelsPicker = ({ onVideoSelect }: Props) => {
 
   return (
     <Stack spacing={4} pt="2">
-      <HStack align="flex-start">
-        <Stack>
-          <TextInput
-            autoFocus
-            placeholder="Search..."
-            onChange={(query) => {
-              setSearchQuery(query);
-              fetchNewVideos(query, 0, { orientation, size });
-            }}
-            withVariableButton={false}
-            debounceTimeout={500}
-            forceDebounce
-            width="full"
+      <Stack>
+        <HStack align="flex-start">
+          <Stack>
+            <DebouncedTextInput
+              autoFocus
+              placeholder="Search..."
+              onValueChange={(query) => {
+                setSearchQuery(query);
+                fetchNewVideos(query, 0, { orientation, size });
+              }}
+              debounceTimeout={500}
+            />
+          </Stack>
+          <a target="_blank" href={`https://www.pexels.com`} rel="noopener">
+            <PexelsLogo width="100px" height="40px" />
+          </a>
+        </HStack>
+        <HStack w="full">
+          <BasicSelect
+            value={orientation}
+            onChange={updateOrientation}
+            items={[
+              { label: "Landscape", value: "landscape" },
+              { label: "Portrait", value: "portrait" },
+              { label: "Square", value: "square" },
+            ]}
           />
-          <HStack>
-            <DropdownList
-              size="sm"
-              currentItem={orientation}
-              onItemSelect={updateOrientation}
-              items={["landscape", "portrait", "square"]}
-            />
-            <DropdownList
-              size="sm"
-              currentItem={size}
-              onItemSelect={updateSize}
-              items={["small", "medium", "large"]}
-            />
-          </HStack>
-        </Stack>
-        <Link isExternal href={`https://www.pexels.com`}>
-          <PexelsLogo width="100px" height="40px" />
-        </Link>
-      </HStack>
+          <BasicSelect
+            value={size}
+            onChange={updateSize}
+            items={[
+              { label: "Small", value: "small" },
+              { label: "Medium", value: "medium" },
+              { label: "Large", value: "large" },
+            ]}
+          />
+        </HStack>
+      </Stack>
       {isDefined(error) && (
-        <Alert status="error">
-          <AlertIcon />
-          {error}
-        </Alert>
+        <Alert.Root variant="error">
+          <TriangleAlertIcon />
+          <Alert.Description>{error}</Alert.Description>
+        </Alert.Root>
       )}
       <Stack overflowY="auto" maxH="400px" ref={scrollContainer}>
         {videos.length > 0 && (
@@ -186,7 +190,7 @@ export const PexelsPicker = ({ onVideoSelect }: Props) => {
         )}
         {isFetching && (
           <Flex justifyContent="center" py="4">
-            <Spinner />
+            <LoaderCircleIcon className="animate-spin" />
           </Flex>
         )}
       </Stack>
@@ -234,16 +238,14 @@ const PexelsVideo = ({ video, onClick }: PexelsVideoProps) => {
       onMouseLeave={() => setIsImageHovered(false)}
     >
       {
-        <Image
-          objectFit="cover"
+        <img
+          className={cx(
+            "object-cover size-full cursor-pointer rounded-md aspect-[4/3]",
+            video.height < video.width ? "size-full" : undefined,
+          )}
           src={thumbnailImage}
           alt={`Pexels Video ${video.id}`}
           onClick={onClick}
-          rounded="md"
-          h={video.height < video.width ? "100%" : undefined}
-          w={video.height < video.width ? "100%" : undefined}
-          aspectRatio={4 / 3}
-          cursor="pointer"
         />
       }
       <Box
@@ -256,13 +258,7 @@ const PexelsVideo = ({ video, onClick }: PexelsVideoProps) => {
         opacity={isImageHovered ? 1 : 0}
         transition="opacity .2s ease-in-out"
       >
-        <TextLink
-          fontSize="xs"
-          isExternal
-          href={url}
-          noOfLines={1}
-          color="white"
-        >
+        <TextLink className="text-xs text-white" isExternal href={url}>
           {user.name}
         </TextLink>
       </Box>

@@ -1,25 +1,15 @@
-import { ImageUploadContent } from "@/components/ImageUploadContent";
-import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import {
-  Box,
-  Flex,
-  HStack,
-  Heading,
-  Image,
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-  Portal,
-  Stack,
-  Switch,
-  chakra,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Box, Flex, Stack } from "@chakra-ui/react";
 import { isSvgSrc } from "@typebot.io/lib/utils";
 import type { AvatarProps } from "@typebot.io/theme/schemas";
+import { Field } from "@typebot.io/ui/components/Field";
+import { Popover } from "@typebot.io/ui/components/Popover";
+import { Switch } from "@typebot.io/ui/components/Switch";
+import { useOpenControls } from "@typebot.io/ui/hooks/useOpenControls";
 import React from "react";
+import { ImageUploadContent } from "@/components/ImageUploadContent";
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
 import { DefaultAvatar } from "../DefaultAvatar";
+
 type Props = {
   uploadFileProps: FilePathUploadProps;
   title: string;
@@ -35,7 +25,7 @@ export const AvatarForm = ({
   isDefaultCheck = false,
   onAvatarChange,
 }: Props) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const controls = useOpenControls();
   const isChecked = avatarProps ? avatarProps.isEnabled : isDefaultCheck;
   const handleOnCheck = () =>
     onAvatarChange({ ...avatarProps, isEnabled: !isChecked });
@@ -43,90 +33,64 @@ export const AvatarForm = ({
     onAvatarChange({ isEnabled: isChecked, url });
   const popoverContainerRef = React.useRef<HTMLDivElement>(null);
 
-  useOutsideClick({
-    ref: popoverContainerRef,
-    handler: onClose,
-    isEnabled: isOpen,
-  });
-
   const isDefaultAvatar = !avatarProps?.url || avatarProps.url.includes("{{");
   return (
     <Stack borderWidth={1} rounded="md" p="4" spacing={4}>
       <Flex justifyContent="space-between">
-        <HStack>
-          <Heading as="label" fontSize="lg" htmlFor={title} mb="1">
+        <Field.Root className="flex-row items-center">
+          <Field.Label className="font-medium font-heading text-lg">
             {title}
-          </Heading>
-          <Switch isChecked={isChecked} id={title} onChange={handleOnCheck} />
-        </HStack>
+          </Field.Label>
+          <Switch
+            checked={isChecked}
+            id={title}
+            onCheckedChange={handleOnCheck}
+          />
+        </Field.Root>
         {isChecked && (
           <Flex ref={popoverContainerRef}>
-            <Popover isLazy isOpen={isOpen}>
-              <PopoverAnchor>
+            <Popover.Root {...controls}>
+              <Popover.Trigger>
                 {isDefaultAvatar ? (
-                  <Box onClick={onOpen}>
+                  <Box>
                     <DefaultAvatar
                       cursor="pointer"
-                      _hover={{ filter: "brightness(.9)" }}
+                      className="hover:brightness-90"
                     />
                   </Box>
                 ) : isSvgSrc(avatarProps?.url) ? (
-                  <Image
-                    onClick={onOpen}
+                  <img
                     src={avatarProps.url}
                     alt="Website image"
-                    cursor="pointer"
-                    _hover={{ filter: "brightness(.9)" }}
-                    transition="filter 200ms"
-                    boxSize="40px"
+                    className="cursor-pointer transition-filter duration-200 rounded-md hover:brightness-90 size-10"
                   />
                 ) : avatarProps?.url?.startsWith("http") ? (
-                  <Image
-                    onClick={onOpen}
+                  <img
                     src={avatarProps.url}
                     alt="Website image"
-                    cursor="pointer"
-                    _hover={{ filter: "brightness(.9)" }}
-                    transition="filter 200ms"
-                    rounded="full"
-                    boxSize="40px"
-                    objectFit="cover"
+                    className="cursor-pointer transition-filter duration-200 rounded-md hover:brightness-90 size-10 object-cover"
                   />
                 ) : (
-                  <chakra.span
-                    fontSize="40px"
-                    lineHeight="1"
-                    onClick={onOpen}
-                    cursor="pointer"
-                    _hover={{ filter: "brightness(.9)" }}
-                    transition="filter 200ms"
-                  >
+                  <span className="text-4xl leading-none cursor-pointer transition-filter hover:brightness-90">
                     {avatarProps?.url}
-                  </chakra.span>
+                  </span>
                 )}
-              </PopoverAnchor>
-              <Portal>
-                <PopoverContent
-                  p="4"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  w="500px"
-                >
-                  <ImageUploadContent
-                    uploadFileProps={uploadFileProps}
-                    defaultUrl={avatarProps?.url}
-                    imageSize="thumb"
-                    onSubmit={handleImageUrl}
-                    additionalTabs={{
-                      emoji: true,
-                      giphy: true,
-                      unsplash: true,
-                      icon: true,
-                    }}
-                  />
-                </PopoverContent>
-              </Portal>
-            </Popover>
+              </Popover.Trigger>
+              <Popover.Popup className="w-[500px]">
+                <ImageUploadContent
+                  uploadFileProps={uploadFileProps}
+                  defaultUrl={avatarProps?.url}
+                  imageSize="thumb"
+                  onSubmit={handleImageUrl}
+                  additionalTabs={{
+                    emoji: true,
+                    giphy: true,
+                    unsplash: true,
+                    icon: true,
+                  }}
+                />
+              </Popover.Popup>
+            </Popover.Root>
           </Flex>
         )}
       </Flex>

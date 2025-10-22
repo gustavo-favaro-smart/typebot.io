@@ -61,7 +61,15 @@ export type ActionDefinition<
    * Used for AI generation in the builder if enabled by the user.
    */
   aiGenerate?: {
-    fetcherId: string;
+    models:
+      | {
+          type: "static";
+          items: string[];
+        }
+      | {
+          type: "dynamic";
+          fetcherId: string;
+        };
     getModel: (params: {
       credentials: CredentialsFromAuthDef<A>;
       model: string;
@@ -130,7 +138,7 @@ export type ActionDefinition<
         options: WithoutVariables<z.infer<BaseOptions> & z.infer<Options>>;
         variables: VariableStore;
         logs: LogsStore;
-      }) => FunctionToExecute;
+      }) => FunctionToExecute | undefined;
     };
   };
 };
@@ -225,6 +233,7 @@ export type BlockDefinition<
     deployedAt: Date;
     youtubeId: string;
   };
+  badge?: "beta";
   auth?: Auth;
   options?: Options | undefined;
   fetchers?: FetcherDefinition<Auth, Options>[];

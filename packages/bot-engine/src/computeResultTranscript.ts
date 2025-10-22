@@ -1,9 +1,6 @@
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { isBubbleBlock, isInputBlock } from "@typebot.io/blocks-core/helpers";
-import { defaultChoiceInputOptions } from "@typebot.io/blocks-inputs/choice/constants";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
-import { defaultPictureChoiceOptions } from "@typebot.io/blocks-inputs/pictureChoice/constants";
-import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import type { ContinueChatResponse } from "@typebot.io/chat-api/schemas";
 import type { TypebotInSession } from "@typebot.io/chat-session/schemas";
@@ -13,15 +10,17 @@ import { createId } from "@typebot.io/lib/createId";
 import type { Answer } from "@typebot.io/results/schemas/answers";
 import type { SessionStore } from "@typebot.io/runtime-session-store";
 import type { Edge } from "@typebot.io/typebot/schemas/edge";
-import { parseVariables } from "@typebot.io/variables/parseVariables";
-import type { Variable } from "@typebot.io/variables/schemas";
-import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
-import { executeAbTest } from "./blocks/logic/abTest/executeAbTest";
+import type {
+  SetVariableHistoryItem,
+  Variable,
+} from "@typebot.io/variables/schemas";
+import { getReplyOutgoingEdge } from "./getReplyOutgoingEdge";
 import { isTypebotInSessionAtLeastV6 } from "./helpers/isTypebotInSessionAtLeastV6";
 import {
   type BubbleBlockWithDefinedContent,
   parseBubbleBlock,
 } from "./parseBubbleBlock";
+import { validateAndParseInputMessage } from "./validateAndParseInputMessage";
 
 // -----------------------------------------------------------------------------
 // 🛠️  Queue helpers ────────────────────────────────────────────────────────────
@@ -103,6 +102,7 @@ export const computeResultTranscript = ({
   return executeGroup({
     typebotsQueue: [{ typebot }],
     nextGroup: firstGroup,
+    isFirstGroup: true,
     currentTranscript: [],
     queues,
     currentBlockId,
@@ -143,6 +143,7 @@ const executeGroup = ({
   nextGroup,
   typebotsQueue,
   queues,
+  isFirstGroup,
   currentBlockId,
   sessionStore,
 }: {
@@ -154,6 +155,7 @@ const executeGroup = ({
     setVariableHistory: QueueIterator<SetVarSnapshot>;
     visitedEdges: QueueIterator<string>;
   };
+  isFirstGroup?: boolean;
   currentBlockId?: string;
   sessionStore: SessionStore;
 }): TranscriptMessage[] => {
@@ -174,7 +176,15 @@ const executeGroup = ({
     const typebot = typebotsQueue[0]?.typebot;
     if (!typebot) throw new Error("Typebot not found in session");
 
-    if (setVariableHistory.peek()?.blockId === block.id) {
+    // The first block of the flow can have prefilled variables attached so we loop through it all
+    if (isFirstGroup && block.id === nextGroup.group.blocks[0].id) {
+      while (setVariableHistory.peek()?.blockId === block.id) {
+        typebot.variables = applySetVariable(
+          setVariableHistory.next(),
+          typebot,
+        );
+      }
+    } else if (setVariableHistory.peek()?.blockId === block.id) {
       typebot.variables = applySetVariable(setVariableHistory.next(), typebot);
     }
 
@@ -250,13 +260,34 @@ const executeGroup = ({
             : answer.content,
       });
 
-      const outgoing = getOutgoingEdgeId(block, {
-        answer: answer.content,
+      const parsedReply = validateAndParseInputMessage(
+        {
+          type: "text",
+          text: answer.content,
+        },
+        {
+          block,
+          variables: typebot.variables,
+          sessionStore,
+        },
+      );
+
+      if (parsedReply.status === "fail") {
+        throw new Error(
+          "Parsed reply is in fail status when computing result transcript",
+        );
+      }
+
+      const replyOutgoingEdge = getReplyOutgoingEdge(parsedReply, {
+        block,
         variables: typebot.variables,
         sessionStore,
       });
-      if (outgoing.isOffDefaultPath) visitedEdges.next();
-      nextEdgeId = outgoing.edgeId;
+
+      if (!replyOutgoingEdge) continue;
+
+      if (replyOutgoingEdge.isOffDefaultPath) visitedEdges.next();
+      nextEdgeId = replyOutgoingEdge.id;
     }
     // ──────────────────────────────────────────────────────────── Condition
     else if (block.type === LogicBlockType.CONDITION) {
@@ -425,53 +456,4 @@ const convertChatMessageToTranscriptMessage = (
       return null;
     }
   }
-};
-
-const getOutgoingEdgeId = (
-  block: InputBlock,
-  {
-    answer,
-    variables,
-    sessionStore,
-  }: {
-    answer: string | undefined;
-    variables: Variable[];
-    sessionStore: SessionStore;
-  },
-): { edgeId: string | undefined; isOffDefaultPath: boolean } => {
-  if (
-    block.type === InputBlockType.CHOICE &&
-    !(
-      block.options?.isMultipleChoice ??
-      defaultChoiceInputOptions.isMultipleChoice
-    ) &&
-    answer
-  ) {
-    const matchedItem = block.items.find(
-      (item) =>
-        parseVariables(item.content, {
-          variables,
-          sessionStore,
-        }).normalize() === answer.normalize(),
-    );
-    if (matchedItem?.outgoingEdgeId)
-      return { edgeId: matchedItem.outgoingEdgeId, isOffDefaultPath: true };
-  }
-  if (
-    block.type === InputBlockType.PICTURE_CHOICE &&
-    !(
-      block.options?.isMultipleChoice ??
-      defaultPictureChoiceOptions.isMultipleChoice
-    ) &&
-    answer
-  ) {
-    const matchedItem = block.items.find(
-      (item) =>
-        parseVariables(item.title, { variables, sessionStore }).normalize() ===
-        answer.normalize(),
-    );
-    if (matchedItem?.outgoingEdgeId)
-      return { edgeId: matchedItem.outgoingEdgeId, isOffDefaultPath: true };
-  }
-  return { edgeId: block.outgoingEdgeId, isOffDefaultPath: false };
 };

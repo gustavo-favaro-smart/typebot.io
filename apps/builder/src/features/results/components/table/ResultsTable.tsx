@@ -1,20 +1,8 @@
-import { AlignLeftTextIcon } from "@/components/icons";
-import { TimeFilterDropdown } from "@/features/analytics/components/TimeFilterDropdown";
-import type { timeFilterValues } from "@/features/analytics/constants";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import {
-  Box,
-  Button,
-  HStack,
-  Stack,
-  Text,
-  chakra,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Box, HStack, Stack, Text } from "@chakra-ui/react";
 import {
   type ColumnDef,
-  type Updater,
   getCoreRowModel,
+  type Updater,
   useReactTable,
 } from "@tanstack/react-table";
 import { parseColumnsOrder } from "@typebot.io/results/parseColumnsOrder";
@@ -24,8 +12,12 @@ import type {
   TableData,
 } from "@typebot.io/results/schemas/results";
 import type { ResultsTablePreferences } from "@typebot.io/typebot/schemas/typebot";
-import { colors } from "@typebot.io/ui/chakraTheme";
+import { Button } from "@typebot.io/ui/components/Button";
+import { TextAlignLeftIcon } from "@typebot.io/ui/icons/TextAlignLeftIcon";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { TimeFilterSelect } from "@/features/analytics/components/TimeFilterSelect";
+import type { timeFilterValues } from "@/features/analytics/constants";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { HeaderIcon } from "../HeaderIcon";
 import { HeaderRow } from "./HeaderRow";
 import { IndeterminateCheckbox } from "./IndeterminateCheckbox";
@@ -57,7 +49,6 @@ export const ResultsTable = ({
   onLogOpenIndex,
   onResultExpandIndex,
 }: ResultsTableProps) => {
-  const background = useColorModeValue("white", colors.gray[900]);
   const { updateTypebot, currentUserMode } = useTypebot();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const bottomElement = useRef<HTMLDivElement | null>(null);
@@ -164,12 +155,16 @@ export const ResultsTable = ({
         maxSize: 110,
         header: () => (
           <HStack>
-            <AlignLeftTextIcon />
+            <TextAlignLeftIcon />
             <Text>Logs</Text>
           </HStack>
         ),
         cell: ({ row }) => (
-          <Button size="sm" onClick={onLogOpenIndex(row.index)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onLogOpenIndex(row.index)}
+          >
             See logs
           </Button>
         ),
@@ -227,10 +222,10 @@ export const ResultsTable = ({
             onClearSelection={() => setRowSelection({})}
           />
         )}
-        <TimeFilterDropdown
+        <TimeFilterSelect
+          size="sm"
           timeFilter={timeFilter}
           onTimeFilterChange={onTimeFilterChange}
-          size="sm"
         />
         <TableSettingsButton
           resultHeader={resultHeader}
@@ -241,7 +236,7 @@ export const ResultsTable = ({
         />
       </HStack>
       <Box ref={tableWrapper} overflow="auto" data-testid="results-table">
-        <chakra.table background={background}>
+        <table className="bg-gray-1 border-separate border-spacing-0">
           <thead>
             {instance.getHeaderGroups().map((headerGroup) => (
               <HeaderRow key={headerGroup.id} headerGroup={headerGroup} />
@@ -270,7 +265,7 @@ export const ResultsTable = ({
               />
             )}
           </tbody>
-        </chakra.table>
+        </table>
       </Box>
     </Stack>
   );

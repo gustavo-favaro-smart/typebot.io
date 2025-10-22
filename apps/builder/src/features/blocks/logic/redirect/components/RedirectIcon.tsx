@@ -1,7 +1,5 @@
-import { ExternalLinkIcon } from "@/components/icons";
-import type { IconProps } from "@chakra-ui/react";
-import React from "react";
+import { ArrowUpRight01Icon } from "@typebot.io/ui/icons/ArrowUpRight01Icon";
 
-export const RedirectIcon = (props: IconProps) => (
-  <ExternalLinkIcon color="purple.500" {...props} />
+export const RedirectIcon = ({ className }: { className?: string }) => (
+  <ArrowUpRight01Icon className={className} />
 );

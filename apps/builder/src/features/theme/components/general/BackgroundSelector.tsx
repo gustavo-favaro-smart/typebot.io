@@ -1,4 +1,3 @@
-import { RadioButtons } from "@/components/inputs/RadioButtons";
 import { Stack } from "@chakra-ui/react";
 import { useTranslate } from "@tolgee/react";
 import {
@@ -6,7 +5,8 @@ import {
   defaultBackgroundType,
 } from "@typebot.io/theme/constants";
 import type { Background } from "@typebot.io/theme/schemas";
-import React from "react";
+import { Label } from "@typebot.io/ui/components/Label";
+import { Radio, RadioGroup } from "@typebot.io/ui/components/RadioGroup";
 import { BackgroundContent } from "./BackgroundContent";
 
 type Props = {
@@ -28,24 +28,25 @@ export const BackgroundSelector = ({
 
   return (
     <Stack spacing={4}>
-      <RadioButtons
-        options={[
-          {
-            label: t("theme.sideMenu.global.background.color.select"),
-            value: BackgroundType.COLOR,
-          },
-          {
-            label: t("theme.sideMenu.global.background.image.select"),
-            value: BackgroundType.IMAGE,
-          },
-          {
-            label: t("theme.sideMenu.global.background.none.select"),
-            value: BackgroundType.NONE,
-          },
-        ]}
+      <RadioGroup
         value={background?.type ?? defaultBackgroundType}
-        onSelect={handleBackgroundTypeChange}
-      />
+        onValueChange={(value) =>
+          handleBackgroundTypeChange(value as BackgroundType)
+        }
+      >
+        <Label className="hover:bg-gray-2/50 rounded-md p-2 border flex-1 flex justify-center">
+          <Radio value={BackgroundType.COLOR} className="hidden" />
+          {t("theme.sideMenu.global.background.color.select")}
+        </Label>
+        <Label className="hover:bg-gray-2/50 rounded-md p-2 border flex-1 flex justify-center">
+          <Radio value={BackgroundType.IMAGE} className="hidden" />
+          {t("theme.sideMenu.global.background.image.select")}
+        </Label>
+        <Label className="hover:bg-gray-2/50 rounded-md p-2 border flex-1 flex justify-center">
+          <Radio value={BackgroundType.NONE} className="hidden" />
+          {t("theme.sideMenu.global.background.none.select")}
+        </Label>
+      </RadioGroup>
       <BackgroundContent
         background={background}
         onBackgroundContentChange={handleBackgroundContentChange}

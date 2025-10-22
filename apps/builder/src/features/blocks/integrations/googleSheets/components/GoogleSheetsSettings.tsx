@@ -1,21 +1,7 @@
-import { DropdownList } from "@/components/DropdownList";
-import { TableList } from "@/components/TableList";
-import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
-import { useTypebot } from "@/features/editor/providers/TypebotProvider";
-import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { Stack, Text, useDisclosure } from "@chakra-ui/react";
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Stack,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
-import {
-  GoogleSheetsAction,
   defaultGoogleSheetsOptions,
+  GoogleSheetsAction,
   totalRowsToExtractOptions,
 } from "@typebot.io/blocks-integrations/googleSheets/constants";
 import type {
@@ -28,12 +14,18 @@ import type {
   GoogleSheetsUpdateRowOptionsV6,
 } from "@typebot.io/blocks-integrations/googleSheets/schema";
 import { isDefined } from "@typebot.io/lib/utils";
-import React, { useMemo } from "react";
+import { Accordion } from "@typebot.io/ui/components/Accordion";
+import { useMemo } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
+import { TableList } from "@/components/TableList";
+import { CredentialsDropdown } from "@/features/credentials/components/CredentialsDropdown";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { useSheets } from "../hooks/useSheets";
 import type { Sheet } from "../types";
 import { CellWithValueStack } from "./CellWithValueStack";
 import { CellWithVariableIdStack } from "./CellWithVariableIdStack";
-import { GoogleSheetConnectModal } from "./GoogleSheetsConnectModal";
+import { GoogleSheetConnectDialog } from "./GoogleSheetsConnectDialog";
 import { GoogleSpreadsheetPicker } from "./GoogleSpreadsheetPicker";
 import { RowsFilterTableList } from "./RowsFilterTableList";
 import { SheetsDropdown } from "./SheetsDropdown";
@@ -72,7 +64,7 @@ export const GoogleSheetsSettings = ({
   const handleSheetIdChange = (sheetId: string | undefined) =>
     onOptionsChange({ ...options, sheetId });
 
-  const handleActionChange = (action: GoogleSheetsAction) =>
+  const handleActionChange = (action: GoogleSheetsAction | undefined) =>
     onOptionsChange({
       credentialsId: options?.credentialsId,
       spreadsheetId: options?.spreadsheetId,
@@ -98,7 +90,7 @@ export const GoogleSheetsSettings = ({
         />
       )}
       {typebot && (
-        <GoogleSheetConnectModal
+        <GoogleSheetConnectDialog
           typebotId={typebot.id}
           blockId={blockId}
           isOpen={isOpen}
@@ -124,9 +116,9 @@ export const GoogleSheetsSettings = ({
       {options?.spreadsheetId &&
         options.credentialsId &&
         isDefined(options.sheetId) && (
-          <DropdownList
-            currentItem={"action" in options ? options.action : undefined}
-            onItemSelect={handleActionChange}
+          <BasicSelect
+            value={"action" in options ? options.action : undefined}
+            onChange={handleActionChange}
             items={Object.values(GoogleSheetsAction)}
             placeholder="Select an operation"
           />
@@ -202,32 +194,30 @@ const ActionOptions = ({
       );
     case GoogleSheetsAction.UPDATE_ROW:
       return (
-        <Accordion allowMultiple>
-          <AccordionItem>
-            <AccordionButton>
+        <Accordion.Root>
+          <Accordion.Item>
+            <Accordion.Trigger>
               <Text w="full" textAlign="left">
                 Row(s) to update
               </Text>
-              <AccordionIcon />
-            </AccordionButton>
+            </Accordion.Trigger>
 
-            <AccordionPanel pt="4">
+            <Accordion.Panel>
               <RowsFilterTableList
                 columns={sheet?.columns ?? []}
                 filter={options.filter}
                 onFilterChange={handleFilterChange}
               />
-            </AccordionPanel>
-          </AccordionItem>
-          <AccordionItem>
-            <AccordionButton>
+            </Accordion.Panel>
+          </Accordion.Item>
+          <Accordion.Item>
+            <Accordion.Trigger>
               <Text w="full" textAlign="left">
                 Cells to update
               </Text>
-              <AccordionIcon />
-            </AccordionButton>
+            </Accordion.Trigger>
 
-            <AccordionPanel pt="4">
+            <Accordion.Panel>
               <TableList<Cell>
                 initialItems={options.cellsToUpsert}
                 onItemsChange={handleUpsertColumnsChange}
@@ -241,68 +231,59 @@ const ActionOptions = ({
                   />
                 )}
               </TableList>
-            </AccordionPanel>
-          </AccordionItem>
-        </Accordion>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>
       );
     case GoogleSheetsAction.GET:
       return (
-        <Accordion allowMultiple>
-          <Stack>
-            <AccordionItem>
-              <AccordionButton>
-                <Text w="full" textAlign="left">
-                  Select row(s)
-                </Text>
-                <AccordionIcon />
-              </AccordionButton>
+        <Accordion.Root>
+          <Accordion.Item>
+            <Accordion.Trigger>
+              <Text w="full" textAlign="left">
+                Select row(s)
+              </Text>
+            </Accordion.Trigger>
 
-              <AccordionPanel pt="4" as={Stack}>
-                <DropdownList
-                  items={totalRowsToExtractOptions}
-                  currentItem={
-                    options.totalRowsToExtract ??
-                    defaultGoogleSheetsOptions.totalRowsToExtract
-                  }
-                  onItemSelect={updateTotalRowsToExtract}
-                />
-                <RowsFilterTableList
-                  columns={sheet?.columns ?? []}
-                  filter={options.filter}
-                  onFilterChange={handleFilterChange}
-                />
-              </AccordionPanel>
-            </AccordionItem>
+            <Accordion.Panel>
+              <BasicSelect
+                items={totalRowsToExtractOptions}
+                value={
+                  options.totalRowsToExtract ??
+                  defaultGoogleSheetsOptions.totalRowsToExtract
+                }
+                onChange={updateTotalRowsToExtract}
+              />
+              <RowsFilterTableList
+                columns={sheet?.columns ?? []}
+                filter={options.filter}
+                onFilterChange={handleFilterChange}
+              />
+            </Accordion.Panel>
+          </Accordion.Item>
 
-            <AccordionItem>
-              <AccordionButton>
-                <Text w="full" textAlign="left">
-                  Columns to extract
-                </Text>
-                <AccordionIcon />
-              </AccordionButton>
-
-              <AccordionPanel pt="4">
-                <TableList<ExtractingCell>
-                  initialItems={options.cellsToExtract}
-                  onItemsChange={handleExtractingCellsChange}
-                  addLabel="Add a value"
-                  hasDefaultItem
-                >
-                  {({ item, onItemChange }) => (
-                    <CellWithVariableIdStack
-                      item={item}
-                      onItemChange={onItemChange}
-                      columns={sheet?.columns ?? []}
-                    />
-                  )}
-                </TableList>
-              </AccordionPanel>
-            </AccordionItem>
-          </Stack>
-        </Accordion>
+          <Accordion.Item>
+            <Accordion.Trigger>Columns to extract</Accordion.Trigger>
+            <Accordion.Panel>
+              <TableList<ExtractingCell>
+                initialItems={options.cellsToExtract}
+                onItemsChange={handleExtractingCellsChange}
+                addLabel="Add a value"
+                hasDefaultItem
+              >
+                {({ item, onItemChange }) => (
+                  <CellWithVariableIdStack
+                    item={item}
+                    onItemChange={onItemChange}
+                    columns={sheet?.columns ?? []}
+                  />
+                )}
+              </TableList>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>
       );
     default:
-      return <></>;
+      return null;
   }
 };
