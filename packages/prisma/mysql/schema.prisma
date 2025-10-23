@@ -27,7 +27,6 @@ model Account {
   user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -36,8 +35,6 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model User {
@@ -45,10 +42,10 @@ model User {
   createdAt                   DateTime                  @default(now())
   updatedAt                   DateTime                  @default(now()) @updatedAt
   lastActivityAt              DateTime                  @default(now())
-  name                        String?                   @db.VarChar(255)
+  name                        String?
   email                       String?                   @unique
   emailVerified               DateTime?
-  image                       String?                   @db.VarChar(1000)
+  image                       String?
   company                     String?
   onboardingCategories        Json
   referral                    String?
@@ -63,7 +60,7 @@ model User {
   displayedInAppNotifications Json?
   credentials                 UserCredentials[]
   groupTitlesAutoGeneration   Json?
-  preferredLanguage           String?                   @db.VarChar(10)
+  preferredLanguage           String?
   termsAcceptedAt             DateTime?
 }
 
@@ -74,16 +71,14 @@ model ApiToken {
   name      String
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  @@index([ownerId])
 }
 
 model Workspace {
   id                            String                @id @default(cuid())
   createdAt                     DateTime              @default(now())
   updatedAt                     DateTime              @default(now()) @updatedAt
-  name                          String                @db.VarChar(255)
-  icon                          String?               @db.VarChar(1000)
+  name                          String
+  icon                          String?
   plan                          Plan                  @default(FREE)
   stripeId                      String?               @unique
   credentials                   Credentials[]
@@ -125,7 +120,6 @@ model MemberInWorkspace {
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, workspaceId])
-  @@index([workspaceId])
 }
 
 model WorkspaceInvitation {
@@ -136,30 +130,24 @@ model WorkspaceInvitation {
   workspaceId String
   type        WorkspaceRole
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId])
 }
 
 model CustomDomain {
-  name        String    @id @db.VarChar(255)
+  name        String    @id
   createdAt   DateTime  @default(now())
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId])
 }
 
 model Credentials {
   id          String    @id @default(cuid())
   createdAt   DateTime  @default(now())
   workspaceId String
-  data        String    @db.Text
+  data        String
   name        String
   type        String
   iv          String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId])
 }
 
 model UserCredentials {
@@ -171,14 +159,12 @@ model UserCredentials {
   type      String
   iv        String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model VerificationToken {
   identifier String
   token      String   @unique
-  value      String?  @db.Text
+  value      String?
   expires    DateTime
 
   @@unique([identifier, token])
@@ -188,25 +174,22 @@ model DashboardFolder {
   id             String            @id @default(cuid())
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now()) @updatedAt
-  name           String            @db.VarChar(255)
+  name           String
   parentFolderId String?
   workspaceId    String
   parentFolder   DashboardFolder?  @relation("ParentChild", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   childrenFolder DashboardFolder[] @relation("ParentChild")
   typebots       Typebot[]
-
-  @@index([workspaceId])
-  @@index([parentFolderId])
 }
 
 model Typebot {
   id                      String                    @id @default(cuid())
-  version                 String?                   @db.VarChar(10)
+  version                 String?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @default(now()) @updatedAt
-  icon                    String?                   @db.Text()
-  name                    String                    @db.VarChar(255)
+  icon                    String?
+  name                    String
   folderId                String?
   groups                  Json
   events                  Json?
@@ -233,7 +216,6 @@ model Typebot {
   bannedIps               BannedIp[]
 
   @@index([workspaceId])
-  @@index([folderId])
   @@index([isArchived, createdAt(sort: Desc)])
 }
 
@@ -246,7 +228,6 @@ model Invitation {
   typebot   Typebot           @relation(fields: [typebotId], references: [id], onDelete: Cascade)
 
   @@unique([email, typebotId])
-  @@index([typebotId])
 }
 
 model CollaboratorsOnTypebots {
@@ -259,12 +240,11 @@ model CollaboratorsOnTypebots {
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, typebotId])
-  @@index([typebotId])
 }
 
 model PublicTypebot {
   id            String                @id @default(cuid())
-  version       String?               @db.VarChar(10)
+  version       String?
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @default(now()) @updatedAt
   typebotId     String                @unique
@@ -280,7 +260,7 @@ model PublicTypebot {
 
 model RuntimeMediaIdCache {
   provider        ChatProvider
-  url             String         @db.VarChar(512)
+  url             String
   mediaId         String
   expiresAt       DateTime?
   publicTypebot   PublicTypebot? @relation(fields: [publicTypebotId], references: [id], onDelete: Cascade)
@@ -306,13 +286,13 @@ model Result {
   lastChatSessionId  String?
   typebot            Typebot                  @relation(fields: [typebotId], references: [id], onDelete: Cascade)
   answers            Answer[]
+  answersV2          AnswerV2[]
   logs               Log[]
   edges              VisitedEdge[]
   setVariableHistory SetVariableHistoryItem[]
-  answersV2          AnswerV2[]
 
-  @@index([typebotId, isArchived, hasStarted, createdAt(sort: Desc)])
-  @@index([typebotId, isArchived, isCompleted])
+  @@index([typebotId, hasStarted, createdAt(sort: Desc)])
+  @@index([typebotId, isCompleted])
 }
 
 model SetVariableHistoryItem {
@@ -321,7 +301,7 @@ model SetVariableHistoryItem {
   index      Int
   variableId String
   blockId    String
-  value      Json // string or list of strings
+  value      Json // string or list 
 
   @@unique([resultId, index])
 }
@@ -340,22 +320,21 @@ model Log {
   createdAt   DateTime @default(now())
   resultId    String
   status      String
-  description String   @db.Text
-  context     String?  @db.Text
-  details     String?  @db.Text
+  context     String?
+  description String
+  details     String?
   result      Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
 
   @@index([resultId])
 }
 
-// TODO: gradually remove variableId and groupId
 model Answer {
   createdAt  DateTime @default(now()) @updatedAt
   resultId   String
   blockId    String
   groupId    String
   variableId String?
-  content    String   @db.Text
+  content    String
   result     Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
 
   @@unique([resultId, blockId, groupId])
@@ -365,12 +344,11 @@ model AnswerV2 {
   id               Int      @id @default(autoincrement())
   createdAt        DateTime @default(now())
   blockId          String
-  content          String   @db.Text
+  content          String
   attachedFileUrls Json?
   resultId         String
   result           Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
 
-  @@index([resultId])
   @@index([blockId])
 }
 
@@ -384,15 +362,13 @@ model Webhook {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
-  url         String?  @db.VarChar(2000)
+  url         String?
   method      String
   queryParams Json
   headers     Json
-  body        String?  @db.Text
+  body        String?
   typebotId   String
   typebot     Typebot  @relation(fields: [typebotId], references: [id], onDelete: Cascade)
-
-  @@index([typebotId])
 }
 
 model ClaimableCustomPlan {
@@ -430,8 +406,6 @@ model ThemeTemplate {
   theme       Json
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
-
-  @@index([workspaceId])
 }
 
 model BannedIp {
@@ -442,9 +416,6 @@ model BannedIp {
   responsibleTypebotId String
   user                 User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   userId               String
-
-  @@index([responsibleTypebotId])
-  @@index([userId])
 }
 
 enum WorkspaceRole {

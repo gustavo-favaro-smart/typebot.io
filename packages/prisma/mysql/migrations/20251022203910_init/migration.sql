@@ -16,7 +16,6 @@ CREATE TABLE `Account` (
     `oauth_token` VARCHAR(191) NULL,
     `refresh_token_expires_in` INTEGER NULL,
 
-    INDEX `Account_userId_idx`(`userId`),
     UNIQUE INDEX `Account_provider_providerAccountId_key`(`provider`, `providerAccountId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -29,7 +28,6 @@ CREATE TABLE `Session` (
     `expires` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Session_sessionToken_key`(`sessionToken`),
-    INDEX `Session_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -39,10 +37,10 @@ CREATE TABLE `User` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `lastActivityAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `name` VARCHAR(255) NULL,
+    `name` VARCHAR(191) NULL,
     `email` VARCHAR(191) NULL,
     `emailVerified` DATETIME(3) NULL,
-    `image` VARCHAR(1000) NULL,
+    `image` VARCHAR(191) NULL,
     `company` VARCHAR(191) NULL,
     `onboardingCategories` JSON NOT NULL,
     `referral` VARCHAR(191) NULL,
@@ -50,7 +48,8 @@ CREATE TABLE `User` (
     `preferredAppAppearance` VARCHAR(191) NULL,
     `displayedInAppNotifications` JSON NULL,
     `groupTitlesAutoGeneration` JSON NULL,
-    `preferredLanguage` VARCHAR(10) NULL,
+    `preferredLanguage` VARCHAR(191) NULL,
+    `termsAcceptedAt` DATETIME(3) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -65,7 +64,6 @@ CREATE TABLE `ApiToken` (
     `ownerId` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `ApiToken_token_key`(`token`),
-    INDEX `ApiToken_ownerId_idx`(`ownerId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -74,8 +72,8 @@ CREATE TABLE `Workspace` (
     `id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `name` VARCHAR(255) NOT NULL,
-    `icon` VARCHAR(1000) NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `icon` VARCHAR(191) NULL,
     `plan` ENUM('FREE', 'STARTER', 'PRO', 'LIFETIME', 'OFFERED', 'CUSTOM', 'UNLIMITED', 'ENTERPRISE') NOT NULL DEFAULT 'FREE',
     `stripeId` VARCHAR(191) NULL,
     `additionalChatsIndex` INTEGER NOT NULL DEFAULT 0,
@@ -109,7 +107,6 @@ CREATE TABLE `MemberInWorkspace` (
     `workspaceId` VARCHAR(191) NOT NULL,
     `role` ENUM('ADMIN', 'MEMBER', 'GUEST') NOT NULL,
 
-    INDEX `MemberInWorkspace_workspaceId_idx`(`workspaceId`),
     UNIQUE INDEX `MemberInWorkspace_userId_workspaceId_key`(`userId`, `workspaceId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -122,17 +119,15 @@ CREATE TABLE `WorkspaceInvitation` (
     `workspaceId` VARCHAR(191) NOT NULL,
     `type` ENUM('ADMIN', 'MEMBER', 'GUEST') NOT NULL,
 
-    INDEX `WorkspaceInvitation_workspaceId_idx`(`workspaceId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `CustomDomain` (
-    `name` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `workspaceId` VARCHAR(191) NOT NULL,
 
-    INDEX `CustomDomain_workspaceId_idx`(`workspaceId`),
     PRIMARY KEY (`name`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -141,12 +136,11 @@ CREATE TABLE `Credentials` (
     `id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `workspaceId` VARCHAR(191) NOT NULL,
-    `data` TEXT NOT NULL,
+    `data` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `type` VARCHAR(191) NOT NULL,
     `iv` VARCHAR(191) NOT NULL,
 
-    INDEX `Credentials_workspaceId_idx`(`workspaceId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -160,7 +154,6 @@ CREATE TABLE `UserCredentials` (
     `type` VARCHAR(191) NOT NULL,
     `iv` VARCHAR(191) NOT NULL,
 
-    INDEX `UserCredentials_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -168,7 +161,7 @@ CREATE TABLE `UserCredentials` (
 CREATE TABLE `VerificationToken` (
     `identifier` VARCHAR(191) NOT NULL,
     `token` VARCHAR(191) NOT NULL,
-    `value` TEXT NULL,
+    `value` VARCHAR(191) NULL,
     `expires` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `VerificationToken_token_key`(`token`),
@@ -180,23 +173,21 @@ CREATE TABLE `DashboardFolder` (
     `id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `name` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
     `parentFolderId` VARCHAR(191) NULL,
     `workspaceId` VARCHAR(191) NOT NULL,
 
-    INDEX `DashboardFolder_workspaceId_idx`(`workspaceId`),
-    INDEX `DashboardFolder_parentFolderId_idx`(`parentFolderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Typebot` (
     `id` VARCHAR(191) NOT NULL,
-    `version` VARCHAR(10) NULL,
+    `version` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `icon` TEXT NULL,
-    `name` VARCHAR(255) NOT NULL,
+    `icon` VARCHAR(191) NULL,
+    `name` VARCHAR(191) NOT NULL,
     `folderId` VARCHAR(191) NULL,
     `groups` JSON NOT NULL,
     `events` JSON NULL,
@@ -217,7 +208,6 @@ CREATE TABLE `Typebot` (
     UNIQUE INDEX `Typebot_publicId_key`(`publicId`),
     UNIQUE INDEX `Typebot_customDomain_key`(`customDomain`),
     INDEX `Typebot_workspaceId_idx`(`workspaceId`),
-    INDEX `Typebot_folderId_idx`(`folderId`),
     INDEX `Typebot_isArchived_createdAt_idx`(`isArchived`, `createdAt` DESC),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -230,7 +220,6 @@ CREATE TABLE `Invitation` (
     `typebotId` VARCHAR(191) NOT NULL,
     `type` ENUM('READ', 'WRITE', 'FULL_ACCESS') NOT NULL,
 
-    INDEX `Invitation_typebotId_idx`(`typebotId`),
     UNIQUE INDEX `Invitation_email_typebotId_key`(`email`, `typebotId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -242,14 +231,13 @@ CREATE TABLE `CollaboratorsOnTypebots` (
     `typebotId` VARCHAR(191) NOT NULL,
     `type` ENUM('READ', 'WRITE', 'FULL_ACCESS') NOT NULL,
 
-    INDEX `CollaboratorsOnTypebots_typebotId_idx`(`typebotId`),
     UNIQUE INDEX `CollaboratorsOnTypebots_userId_typebotId_key`(`userId`, `typebotId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `PublicTypebot` (
     `id` VARCHAR(191) NOT NULL,
-    `version` VARCHAR(10) NULL,
+    `version` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `typebotId` VARCHAR(191) NOT NULL,
@@ -265,6 +253,18 @@ CREATE TABLE `PublicTypebot` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `RuntimeMediaIdCache` (
+    `provider` ENUM('WHATSAPP', 'DIALOG360') NOT NULL,
+    `url` VARCHAR(191) NOT NULL,
+    `mediaId` VARCHAR(191) NOT NULL,
+    `expiresAt` DATETIME(3) NULL,
+    `publicTypebotId` VARCHAR(191) NOT NULL,
+
+    INDEX `RuntimeMediaIdCache_expiresAt_idx`(`expiresAt`),
+    UNIQUE INDEX `RuntimeMediaIdCache_publicTypebotId_provider_url_key`(`publicTypebotId`, `provider`, `url`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Result` (
     `id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -275,8 +275,8 @@ CREATE TABLE `Result` (
     `isArchived` BOOLEAN NULL DEFAULT false,
     `lastChatSessionId` VARCHAR(191) NULL,
 
-    INDEX `Result_typebotId_isArchived_hasStarted_createdAt_idx`(`typebotId`, `isArchived`, `hasStarted`, `createdAt` DESC),
-    INDEX `Result_typebotId_isArchived_isCompleted_idx`(`typebotId`, `isArchived`, `isCompleted`),
+    INDEX `Result_typebotId_hasStarted_createdAt_idx`(`typebotId`, `hasStarted`, `createdAt` DESC),
+    INDEX `Result_typebotId_isCompleted_idx`(`typebotId`, `isCompleted`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -306,9 +306,9 @@ CREATE TABLE `Log` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `resultId` VARCHAR(191) NOT NULL,
     `status` VARCHAR(191) NOT NULL,
-    `description` TEXT NOT NULL,
-    `context` TEXT NULL,
-    `details` TEXT NULL,
+    `context` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NOT NULL,
+    `details` VARCHAR(191) NULL,
 
     INDEX `Log_resultId_idx`(`resultId`),
     PRIMARY KEY (`id`)
@@ -321,7 +321,7 @@ CREATE TABLE `Answer` (
     `blockId` VARCHAR(191) NOT NULL,
     `groupId` VARCHAR(191) NOT NULL,
     `variableId` VARCHAR(191) NULL,
-    `content` TEXT NOT NULL,
+    `content` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `Answer_resultId_blockId_groupId_key`(`resultId`, `blockId`, `groupId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -331,11 +331,10 @@ CREATE TABLE `AnswerV2` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `blockId` VARCHAR(191) NOT NULL,
-    `content` TEXT NOT NULL,
+    `content` VARCHAR(191) NOT NULL,
     `attachedFileUrls` JSON NULL,
     `resultId` VARCHAR(191) NOT NULL,
 
-    INDEX `AnswerV2_resultId_idx`(`resultId`),
     INDEX `AnswerV2_blockId_idx`(`blockId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -355,14 +354,13 @@ CREATE TABLE `Webhook` (
     `id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `url` VARCHAR(2000) NULL,
+    `url` VARCHAR(191) NULL,
     `method` VARCHAR(191) NOT NULL,
     `queryParams` JSON NOT NULL,
     `headers` JSON NOT NULL,
-    `body` TEXT NULL,
+    `body` VARCHAR(191) NULL,
     `typebotId` VARCHAR(191) NOT NULL,
 
-    INDEX `Webhook_typebotId_idx`(`typebotId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -408,7 +406,6 @@ CREATE TABLE `ThemeTemplate` (
     `theme` JSON NOT NULL,
     `workspaceId` VARCHAR(191) NOT NULL,
 
-    INDEX `ThemeTemplate_workspaceId_idx`(`workspaceId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -421,7 +418,5 @@ CREATE TABLE `BannedIp` (
     `userId` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `BannedIp_ip_key`(`ip`),
-    INDEX `BannedIp_responsibleTypebotId_idx`(`responsibleTypebotId`),
-    INDEX `BannedIp_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
